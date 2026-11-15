@@ -5,12 +5,35 @@ const rupiah = n => "Rp " + Number(n).toLocaleString("id-ID");
 const $ = (s, el = document) => el.querySelector(s);
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
+// Normalisasi nomor telepon ke format WhatsApp internasional (628...)
+function toWANumber(phone) {
+  let p = String(phone || "").replace(/\D/g, "");
+  if (p.startsWith("0")) p = "62" + p.slice(1);
+  else if (p.startsWith("8")) p = "628" + p.slice(1);
+  return p;
+}
+
+// Format tanggal lokal Indonesia
+const tgl = d => new Date(d).toLocaleString("id-ID", {
+  day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit"
+});
+
 // Header + navigasi (dipakai di semua halaman)
 function renderHeader(active) {
-  const links = [["index.html", "katalog", "Katalog"], ["studio.html", "studio", "Studio Desain"], ["orders.html", "pesanan", "Pesanan"]];
-  $("#header").innerHTML = `
+  const links = [
+    ["index.html", "katalog", "Katalog"],
+    ["studio.html", "studio", "Studio Desain"],
+    ["orders.html", "pesanan", "Lacak Pesanan"]
+  ];
+  const headerEl = $("#header");
+  if (!headerEl) return;
+  headerEl.innerHTML = `
     <div class="container header-in">
-      <a class="logo" href="index.html"><span class="logo-dot"></span>Azka Printing</a>
+      <a class="logo" href="index.html">
+        <img class="logo-img" src="assets/azka-printing-logo.jpeg" alt="Logo" onerror="this.style.display='none';this.nextElementSibling.style.display='inline-block'">
+        <span class="logo-dot" style="display:none"></span>
+        <span class="logo-text">Azka Printing</span>
+      </a>
       <nav>${links.map(([h, k, t]) => `<a href="${h}" class="${k === active ? "on" : ""}">${t}</a>`).join("")}</nav>
     </div>`;
 }
@@ -19,7 +42,7 @@ function toast(msg) {
   let t = $("#toast");
   if (!t) { t = document.createElement("div"); t.id = "toast"; document.body.appendChild(t); }
   t.textContent = msg; t.classList.add("show");
-  setTimeout(() => t.classList.remove("show"), 3000);
+  setTimeout(() => t.classList.remove("show"), 3200);
 }
 
 // Gambar produk (SVG sederhana) berwarna sesuai pilihan warna

@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Azka Printing - Studio Desain</title>
+  <link rel="icon" type="image/jpeg" href="assets/azka-printing-logo.jpeg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Anton&family=Bebas+Neue&family=Courier+Prime:ital,wght@0,400;0,700;1,400;1,700&family=Pacifico&family=Permanent+Marker&family=Playfair+Display:ital,wght@0,400;0,700;1,400;1,700&family=Poppins:ital,wght@0,400;0,700;1,400;1,700&family=Righteous&display=swap" rel="stylesheet">
@@ -527,14 +528,28 @@
 
     $("#form").addEventListener("submit", async e => {
       e.preventDefault();
-      const btn = $("#submitBtn"); btn.disabled = true; btn.textContent = "Menyimpan...";
+      const btn = $("#submitBtn");
+      const name = $("#cName").value.trim();
+      let phone = $("#cPhone").value.trim();
+
+      if (!name) return toast("Nama lengkap pemesan wajib diisi.");
+      let cleanPhone = phone.replace(/\D/g, "");
+      if (cleanPhone.startsWith("62")) cleanPhone = "0" + cleanPhone.slice(2);
+      if (!cleanPhone.startsWith("08") || cleanPhone.length < 10 || cleanPhone.length > 15) {
+        return toast("Nomor WhatsApp tidak valid. Gunakan format 08xxxxxxxxxx (10-15 digit).");
+      }
+      if (!S.totalQty || S.totalQty < 1) {
+        return toast("Jumlah pesanan minimal 1 pcs.");
+      }
+
+      btn.disabled = true; btn.textContent = "Menyimpan pesanan...";
       try {
         const d = await buildDesign();
         const sizeQty = S.product.has_sizes ? Object.fromEntries(Object.entries(S.sizes).filter(([, n]) => n > 0)) : { Satuan: S.qty };
         const order = {
           order_no: "AZK-" + Math.floor(10000 + Math.random() * 90000),
-          customer_name: $("#cName").value.trim(),
-          customer_phone: $("#cPhone").value.trim(),
+          customer_name: name,
+          customer_phone: cleanPhone,
           status: "menunggu_bayar",
           total: S.total
         };

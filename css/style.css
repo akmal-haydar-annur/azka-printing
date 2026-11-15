@@ -12,6 +12,7 @@ button,input,select{font:inherit}
 #header{background:var(--card);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:10}
 .header-in{display:flex;align-items:center;gap:28px;height:60px}
 .logo{font-weight:800;font-size:18px;display:flex;align-items:center;gap:8px}
+.logo-img{width:28px;height:28px;border-radius:6px;object-fit:cover;flex:none}
 .logo-dot{width:14px;height:14px;border-radius:5px;background:linear-gradient(135deg,var(--primary),var(--accent))}
 nav{display:flex;gap:4px;flex:1}
 nav a{padding:8px 14px;border-radius:10px;color:var(--muted);font-weight:600;font-size:14px}
@@ -196,3 +197,22 @@ select.input{cursor:pointer}
 .sdl{font-size:12px;font-weight:700;margin-bottom:6px;color:var(--ink)}
 .dl{color:var(--primary);font-size:13px;font-weight:600}
 textarea.input{font-family:inherit;resize:vertical}
+
+/* ===== Order Tracking & Stepper ===== */
+.tracker-box{margin:20px 0 24px}
+.tracker-form{display:flex;gap:10px;margin-top:12px;max-width:540px}
+.tracker-form input{flex:1}
+.order-timeline{display:flex;align-items:center;justify-content:space-between;margin:24px 0 20px;position:relative}
+.timeline-step{display:flex;flex-direction:column;align-items:center;gap:6px;z-index:2;background:var(--card);padding:0 6px}
+.step-circle{width:32px;height:32px;border-radius:50%;border:2px solid var(--line);background:#fff;display:grid;place-items:center;font-size:12px;font-weight:700;color:var(--muted);transition:.2s}
+.step-title{font-size:12px;font-weight:600;color:var(--muted);text-align:center}
+.timeline-step.done .step-circle{background:var(--ok);border-color:var(--ok);color:#fff}
+.timeline-step.done .step-title{color:var(--ok);font-weight:700}
+.timeline-step.active .step-circle{background:var(--primary);border-color:var(--primary);color:#fff;box-shadow:0 0 0 4px #e0e7ff}
+.timeline-step.active .step-title{color:var(--primary);font-weight:700}
+.timeline-bar{position:absolute;top:16px;left:32px;right:32px;height:2px;background:var(--line);z-index:1}
+.timeline-bar-fill{height:100%;background:var(--primary);transition:.3s}
+.status-desc-box{background:#f8fafc;border-left:4px solid var(--primary);padding:12px 16px;border-radius:0 8px 8px 0;margin:16px 0;font-size:13px}
+.btn.wa{background:#25d366;border-color:#25d366;color:#fff}
+.btn.wa:hover{background:#128c7e}
+

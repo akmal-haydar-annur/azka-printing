@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" type="image/jpeg" href="assets/azka-printing-logo.jpeg">
+  <title>Azka Printing - Lacak Pesanan</title>
+  <link rel="stylesheet" href="css/style.css?v=4">
+</head>
+<body>
+  <header id="header"></header>
+  <main class="container">
+    <h1>Lacak Status Pesanan</h1>
+    <p class="sub">Pantau proses pengerjaan dan pengiriman merchandise kustom kamu secara real-time.</p>
+
+    <!-- Form Pencarian Pesanan -->
+    <div class="card tracker-box">
+      <form id="trackForm" class="tracker-form" onsubmit="event.preventDefault(); trackFromInput();">
+        <input id="qNo" class="input" placeholder="Masukkan nomor pesanan (contoh: AZK-48213)" required autocomplete="off">
+        <button type="submit" class="btn primary">Lacak Pesanan</button>
+      </form>
+    </div>
+
+    <!-- Hasil Pelacakan -->
+    <div id="trackResult"></div>
+
+    <!-- Pesanan Terakhir di Perangkat Ini -->
+    <div id="myOrdersSection" style="margin-top:32px;display:none">
+      <h2 style="margin-bottom:12px;font-size:16px;color:var(--muted)">Pesanan Terakhir di Perangkat Ini</h2>
+      <div id="myOrdersList"></div>
+    </div>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/config.js"></script>
+  <script src="js/db.js"></script>
+  <script src="js/ui.js"></script>
+  <script>
+    renderHeader("pesanan");
+
+    const STATUS_INFO = {
+      menunggu_bayar: {
+        step: 1,
+        title: "Menunggu Pembayaran",
+        desc: "Pesanan telah kami terima. Silakan konfirmasi pembayaran via WhatsApp agar pesanan segera masuk antrean cetak."
+      },
+      diproduksi: {
+        step: 2,
+        title: "Sedang Diproduksi",
+        desc: "Pembayaran terverifikasi. Desain merchandise kamu saat ini sedang dalam proses cetak & finishing oleh tim produksi kami."
+      },
+      dikirim: {
+        step: 3,
+        title: "Dalam Pengiriman",
+        desc: "Merchandise telah selesai diproduksi, melalui quality control, dan sedang dalam proses pengiriman ke alamat kamu."
+      },
+      selesai: {
+        step: 4,
+        title: "Selesai",
+        desc: "Pesanan telah selesai dan diterima. Terima kasih telah mencetak merchandise di Azka Printing!"
+      }
+    };
+
+    const STEPS = [
+      { key: 1, name: "Menunggu Bayar" },
+      { key: 2, name: "Diproduksi" },
+      { key: 3, name: "Dikirim" },
+      { key: 4, name: "Selesai" }
+    ];
+
+    function renderTimeline(curStep) {
+      const pct = curStep <= 1 ? 0 : curStep === 2 ? 33 : curStep === 3 ? 66 : 100;
+      return `
+        <div class="order-timeline">
+          <div class="timeline-bar"><div class="timeline-bar-fill" style="width:${pct}%"></div></div>
+          ${STEPS.map(s => {
+            const cls = s.key < curStep ? "done" : s.key === curStep ? "active" : "";
+            const num = s.key < curStep ? "✓" : s.key;
+            return `<div class="timeline-step ${cls}">
+              <div class="step-circle">${num}</div>
+              <div class="step-title">${s.name}</div>
+            </div>`;
+          }).join("")}
+        </div>`;
+    }
+
+    function renderOrderDetail(o, isNew = false) {
+      const st = STATUS_INFO[o.status] || STATUS_INFO.menunggu_bayar;
+      const sizeText = o => Object.entries(o || {}).map(([k, v]) => `${k}: ${v}`).join(" • ");
+      const adminWA = (window.APP_CONFIG && window.APP_CONFIG.ADMIN_WHATSAPP) || "6281234567890";
+      const waMsg = encodeURIComponent(`Halo Azka Printing, saya ingin konfirmasi pesanan #${o.order_no} a.n ${o.customer_name} (Total ${rupiah(o.total)}).`);
+      const waUrl = `https://wa.me/${adminWA}?text=${waMsg}`;
+
+      return `
+        ${isNew ? `
+          <div class="card" style="background:#ecfdf5;border-color:#a7f3d0;margin-bottom:16px;color:#065f46">
+            <b>🎉 Pesanan Berhasil Dibuat!</b>
+            <p style="margin-top:4px;font-size:13px">Simpan nomor pesanan kamu: <b>#${esc(o.order_no)}</b>. Silakan hubungi admin via WhatsApp untuk konfirmasi dan panduan pembayaran.</p>
+          </div>` : ""}
+
+        <div class="card order" style="box-shadow:0 4px 16px rgba(0,0,0,.04)">
+          <div class="ohead">
+            <div>
+              <span class="ono" style="font-size:18px">#${esc(o.order_no)}</span>
+              <small class="sub">&nbsp;${tgl(o.created_at)} • Pemesan: <b>${esc(o.customer_name)}</b></small>
+            </div>
+            <span class="badge s-${o.status}">${st.title}</span>
+          </div>
+
+          ${renderTimeline(st.step)}
+
+          <div class="status-desc-box">
+            <b>Status: ${st.title}</b>
+            <p style="margin-top:4px;color:var(--muted)">${st.desc}</p>
+          </div>
+
+          <div style="margin-top:14px">
+            <b style="font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:.03em">Rincian Item:</b>
+            ${(o.order_items || []).map(i => `
+              <div class="oitem">
+                ${designThumb(i, i.category)}
+                <div style="flex:1">
+                  <b>${esc(i.product_name)}</b><br>
+                  <small>${esc(i.method)} • Warna: ${esc(i.color || "-")} • ${sizeText(i.size_qty)}</small>
+                  ${i.design_text ? `<br><small>Teks: "${esc(i.design_text)}"</small>` : ""}
+                  ${designBadge(i)}
+                </div>
+                <b>${i.qty} pcs</b>
+              </div>`).join("")}
+          </div>
+
+          <div class="ofoot">
+            <span>Total Pembayaran</span>
+            <span style="font-size:18px;color:var(--primary)">${rupiah(o.total)}</span>
+          </div>
+
+          <div class="ocard-act" style="justify-content:space-between">
+            <a class="btn wa" href="${waUrl}" target="_blank" rel="noopener">
+              Hubungi Admin via WhatsApp
+            </a>
+            <a class="btn sm" href="studio.html">Pesan Produk Lain</a>
+          </div>
+        </div>`;
+    }
+
+    async function searchOrder(no, isNew = false) {
+      if (!no) return;
+      const res = $("#trackResult");
+      res.innerHTML = '<div class="empty">Mencari data pesanan...</div>';
+
+      try {
+        const order = await DB.getOrderByNo(no);
+        if (order) {
+          res.innerHTML = renderOrderDetail(order, isNew);
+          $("#qNo").value = order.order_no;
+          if (isNew) toast("Pesanan #" + order.order_no + " berhasil dibuat!");
+        } else {
+          res.innerHTML = `
+            <div class="card empty" style="border-style:dashed">
+              <b style="color:var(--ink);font-size:16px">Pesanan Tidak Ditemukan</b>
+              <p class="sub" style="margin-top:6px">Nomor pesanan <b>#${esc(no)}</b> tidak terdaftar di sistem kami.<br>Pastikan nomor pesanan sudah benar (contoh: AZK-48213).</p>
+            </div>`;
+        }
+      } catch (err) {
+        res.innerHTML = `<div class="empty" style="color:#b91c1c">Gagal memuat pesanan: ${esc(err.message)}</div>`;
+      }
+    }
+
+    function trackFromInput() {
+      const val = $("#qNo").value.trim();
+      if (!val) return;
+      searchOrder(val, false);
+    }
+
+    // Tampilkan daftar pesanan lokal di browser ini
+    async function loadMyRecentOrders() {
+      try {
+        const list = await DB.myOrders();
+        if (!list || !list.length) return;
+        const wrap = $("#myOrdersSection");
+        const listEl = $("#myOrdersList");
+        wrap.style.display = "block";
+        listEl.innerHTML = list.map(o => `
+          <div class="card" style="margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;padding:12px 18px;cursor:pointer" onclick="searchOrder('${o.order_no}')">
+            <div>
+              <span class="ono">#${esc(o.order_no)}</span>
+              <small class="sub">&nbsp;• ${tgl(o.created_at)} • ${rupiah(o.total)}</small>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px">
+              <span class="badge s-${o.status}">${(STATUS_INFO[o.status] || {}).title || o.status}</span>
+              <button class="btn sm">Lihat Detail →</button>
+            </div>
+          </div>`).join("");
+      } catch (_) {}
+    }
+
+    // Inisialisasi halaman
+    (async function init() {
+      const params = new URLSearchParams(location.search);
+      const baru = params.get("baru");
+      const orderParam = params.get("order");
+
+      if (baru) {
+        await searchOrder(baru, true);
+      } else if (orderParam) {
+        await searchOrder(orderParam, false);
+      } else {
+        $("#trackResult").innerHTML = `
+          <div class="card empty" style="border-style:dashed">
+            <span style="font-size:32px">📦</span>
+            <b style="color:var(--ink);margin-top:8px;font-size:15px">Masukkan Nomor Pesanan Kamu</b>
+            <p class="sub">Nomor pesanan didapatkan setelah kamu menyelesaikan pemesanan di Studio Desain (format: AZK-XXXXX).</p>
+          </div>`;
+      }
+      await loadMyRecentOrders();
+    })();
+  </script>
+</body>
+</html>
