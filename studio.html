@@ -60,7 +60,7 @@
                 <span>Foto 3D</span>
               </button>
             </div>
-            <div class="v3d-hint">Klik baju untuk taruh teks &bull; Seret logo di baju &bull; Putar 360°</div>
+            <div class="v3d-hint">Putar 360° &bull; Seret elemen di baju &bull; Tarik file gambar ke model</div>
           </div>
         </div>
       </div>
@@ -102,7 +102,11 @@
                 </button>
                 <button type="button" class="btn outline sm" id="addImg" title="Upload gambar atau logo">
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-                  <span>+ Gambar / Logo</span>
+                  <span>+ Gambar</span>
+                </button>
+                <button type="button" class="btn outline sm" id="addBrush" title="Gambar coretan atau tanda tangan bebas dengan kuas">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m9.06 11.9 8.07-8.06a2.85 2.85 0 1 1 4.03 4.03l-8.06 8.08"/><path d="M7.07 14.94c-1.66 0-3 1.35-3 3.02 0 1.33-2.5 1.52-2 2.02 1.08 1.1 2.49 2.02 4 2.02 2.2 0 4-1.8 4-4.04a3.01 3.01 0 0 0-3-3.02z"/></svg>
+                  <span>+ Kuas</span>
                 </button>
                 <input type="file" id="imgFile" accept="image/png,image/jpeg,image/svg+xml,image/webp" hidden>
               </div>
@@ -203,6 +207,82 @@
       </div>
     </div>
   </main>
+
+  <!-- Modal Kuas / Coretan Bebas & Tanda Tangan -->
+  <div class="modal-bg" id="brushModal">
+    <div class="modal brush-modal">
+      <div class="brush-header">
+        <div class="brush-header-title">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m9.06 11.9 8.07-8.06a2.85 2.85 0 1 1 4.03 4.03l-8.06 8.08"/><path d="M7.07 14.94c-1.66 0-3 1.35-3 3.02 0 1.33-2.5 1.52-2 2.02 1.08 1.1 2.49 2.02 4 2.02 2.2 0 4-1.8 4-4.04a3.01 3.01 0 0 0-3-3.02z"/></svg>
+          <span id="brushModalTitle">Kuas &amp; Coretan Bebas</span>
+        </div>
+        <button type="button" class="brush-close-btn" id="closeBrushModal" title="Tutup">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+
+      <!-- Controls Row 1: Mode (Kuas vs Penghapus) + Undo + Bersihkan -->
+      <div class="brush-toolbar">
+        <div class="brush-mode-seg">
+          <button type="button" class="brush-seg-btn active" id="brushModeDraw" title="Mode Menggambar">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="m9.06 11.9 8.07-8.06a2.85 2.85 0 1 1 4.03 4.03l-8.06 8.08"/></svg>
+            <span>Kuas</span>
+          </button>
+          <button type="button" class="brush-seg-btn" id="brushModeErase" title="Mode Penghapus">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="m7 21-4.3-4.3c-1-1-1-2.5 0-3.4l9.6-9.6c1-1 2.5-1 3.4 0l5.6 5.6c1 1 1 2.5 0 3.4L13 21"/><path d="M22 21H7"/><path d="m5 11 9 9"/></svg>
+            <span>Penghapus</span>
+          </button>
+        </div>
+
+        <div class="brush-actions-right">
+          <button type="button" class="btn outline xs" id="brushUndoBtn" title="Batalkan goresan terakhir">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"/></svg>
+            <span>Undo</span>
+          </button>
+          <button type="button" class="btn outline xs" id="brushClearBtn" title="Hapus semua coretan">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+            <span>Bersihkan</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Controls Row 2: Brush Size & Colors -->
+      <div class="brush-palette-bar">
+        <div class="brush-sizes-group">
+          <span class="brush-label">Ukuran:</span>
+          <div class="brush-sizes" id="brushSizes">
+            <button type="button" class="brush-size-dot" data-size="3" title="Halus (3px)"><span style="width:4px;height:4px"></span></button>
+            <button type="button" class="brush-size-dot active" data-size="6" title="Sedang (6px)"><span style="width:8px;height:8px"></span></button>
+            <button type="button" class="brush-size-dot" data-size="12" title="Tebal (12px)"><span style="width:13px;height:13px"></span></button>
+            <button type="button" class="brush-size-dot" data-size="24" title="Spidol (24px)"><span style="width:18px;height:18px"></span></button>
+          </div>
+        </div>
+
+        <div class="brush-colors-group" id="brushColorsGroup">
+          <span class="brush-label">Warna:</span>
+          <div class="brush-swatches" id="brushSwatches"></div>
+          <div class="brush-custom-color-wrap" title="Pilih warna bebas">
+            <input type="color" id="brushCustomColor" value="#111827">
+          </div>
+        </div>
+      </div>
+
+      <!-- Interactive Drawing Area -->
+      <div class="brush-canvas-container">
+        <canvas id="brushCanvas" width="800" height="560"></canvas>
+        <div class="brush-canvas-hint">Gambar tanda tangan atau coretan bebas di sini</div>
+      </div>
+
+      <!-- Footer Buttons -->
+      <div class="brush-footer">
+        <button type="button" class="btn outline sm" id="cancelBrushBtn">Batal</button>
+        <button type="button" class="btn primary sm" id="applyBrushBtn">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+          <span id="applyBrushBtnText">Pasang di Baju</span>
+        </button>
+      </div>
+    </div>
+  </div>
 
   <!-- Form data pemesan -->
   <div class="modal-bg" id="modal">
@@ -306,7 +386,7 @@
           (l.stroke ? `-webkit-text-stroke:calc(var(--s)*.12cqw) ${l.strokeColor};paint-order:stroke fill;` : "");
         return `<div class="ly t${on}" data-id="${l.id}" style="${st}${ex}">${esc(l.text)}</div>`;
       }
-      if (l.type === "image") return `<div class="ly b${on}" data-id="${l.id}" style="${st}"><img src="${l.src}" alt=""></div>`;
+      if (l.type === "image" || l.type === "brush") return `<div class="ly b${on}" data-id="${l.id}" style="${st}"><img src="${l.src || l.dataUrl}" alt=""></div>`;
       const shapeDef = SHAPES[l.shape] || SHAPES.kotak;
       const p = shapeDef[1];
       const paint = l.fill ? `fill="${l.color}"` : `fill="none" stroke="${l.color}" stroke-width="7" stroke-linejoin="round"`;
@@ -395,8 +475,8 @@
     });
 
     function drawLayerList() {
-      const nm = l => l.type === "text" ? l.text.split("\n")[0] || "(kosong)" : l.type === "image" ? l.name : (SHAPES[l.shape] ? SHAPES[l.shape][0] : "Bentuk");
-      const ic = l => l.type === "text" ? "T" : l.type === "image" ? "▣" : "◆";
+      const nm = l => l.type === "text" ? l.text.split("\n")[0] || "(kosong)" : l.type === "brush" ? (l.name || "Coretan Kuas") : l.type === "image" ? l.name : (SHAPES[l.shape] ? SHAPES[l.shape][0] : "Bentuk");
+      const ic = l => l.type === "text" ? "T" : l.type === "brush" ? "K" : l.type === "image" ? "G" : "B";
       const ls = [...layers()].reverse();
       if ($("#layerCountText")) $("#layerCountText").textContent = ls.length ? `(${ls.length} elemen)` : "";
       $("#layerList").innerHTML = ls.length ? ls.map(l => `
@@ -420,7 +500,7 @@
         box.innerHTML = `<div class="props-empty"><p class="sub" style="margin:0">Pilih elemen pada model kaos atau pilih dari daftar lapisan untuk mengatur teks, font, warna, atau ukuran.</p></div>`;
         return;
       }
-      const title = l.type === "text" ? "Teks" : l.type === "image" ? "Gambar" : (SHAPES[l.shape] ? SHAPES[l.shape][0] : "Bentuk");
+      const title = l.type === "text" ? "Teks" : l.type === "brush" ? "Coretan Kuas" : l.type === "image" ? "Gambar" : (SHAPES[l.shape] ? SHAPES[l.shape][0] : "Bentuk");
       if ($("#propsSub")) $("#propsSub").textContent = `(${title})`;
       let h = "";
       if (l.type === "text") {
@@ -440,6 +520,18 @@
       } else if (l.type === "shape") {
         h += `<label class="fl">Warna Bentuk</label>${colorRow("color", l.color)}
           <label class="chk"><input type="checkbox" data-k="fill" ${l.fill ? "checked" : ""}> Isi penuh (matikan untuk garis luar saja)</label>`;
+      } else if (l.type === "brush") {
+        h += `
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+            <div style="width:40px;height:40px;background:#f3f4f6;border-radius:8px;padding:3px;display:flex;align-items:center;justify-content:center;border:1px solid var(--line-subtle);flex-shrink:0">
+              <img src="${l.dataUrl || l.src}" style="max-width:100%;max-height:100%;object-fit:contain" alt="">
+            </div>
+            <div style="flex:1">
+              <p class="sub" style="margin:0 0 4px;font-weight:600;color:var(--ink)">${esc(l.name || "Coretan Kuas")}</p>
+              <button type="button" class="btn outline xs" id="btnEditBrushLayer" style="padding:3px 8px;font-size:11px">Edit Coretan</button>
+            </div>
+          </div>
+          <div class="tbtn"><button type="button" data-act="flip" class="${l.flip ? "on" : ""}">Balik horizontal</button></div>`;
       } else {
         h += `<p class="sub" style="margin:0 0 6px">${esc(l.name)}</p><div class="tbtn"><button type="button" data-act="flip" class="${l.flip ? "on" : ""}">Balik horizontal</button></div>`;
       }
@@ -465,6 +557,9 @@
           <button type="button" class="btn sm danger" data-act="del">Hapus</button>
         </div>`;
       box.innerHTML = h;
+      if ($("#btnEditBrushLayer")) {
+        $("#btnEditBrushLayer").onclick = () => openBrushModal(l.id);
+      }
     }
 
     function drawUploads() {
@@ -624,6 +719,321 @@
     $("#addImg").onclick = () => $("#imgFile").click();
     $("#imgFile").addEventListener("change", e => { addImage(e.target.files[0]); e.target.value = ""; });
 
+    // ==========================================
+    // Fitur Studio Kuas / Coretan Bebas (Brush Tool)
+    // ==========================================
+    let editingBrushLayerId = null;
+    let brushCanvasInited = false;
+    let brushMode = "draw"; // "draw" | "erase"
+    let brushSize = 6;
+    let brushColor = "#111827";
+    let isDrawing = false;
+    let brushPoints = [];
+    let brushHistory = [];
+    const MAX_BRUSH_HISTORY = 25;
+
+    const BRUSH_SWATCHES = [
+      "#111827", "#ffffff", "#ef4444", "#f97316", "#eab308",
+      "#16a34a", "#2563eb", "#8b5cf6", "#ec4899", "#6b7280"
+    ];
+
+    function saveBrushHistory(cv) {
+      if (!cv) return;
+      const ctx = cv.getContext("2d");
+      if (brushHistory.length >= MAX_BRUSH_HISTORY) brushHistory.shift();
+      brushHistory.push(ctx.getImageData(0, 0, cv.width, cv.height));
+    }
+
+    function initBrushCanvas() {
+      const cv = $("#brushCanvas");
+      if (!cv) return;
+      const ctx = cv.getContext("2d");
+
+      // Setup palet warna kuas
+      const swatchesBox = $("#brushSwatches");
+      if (swatchesBox && !swatchesBox.children.length) {
+        swatchesBox.innerHTML = BRUSH_SWATCHES.map(c =>
+          `<button type="button" class="brush-swatch ${c === brushColor ? 'active' : ''}" data-color="${c}" style="background:${c}" title="${c}"></button>`
+        ).join("");
+        swatchesBox.addEventListener("click", e => {
+          const btn = e.target.closest(".brush-swatch");
+          if (!btn) return;
+          brushColor = btn.dataset.color;
+          swatchesBox.querySelectorAll(".brush-swatch").forEach(s => s.classList.remove("active"));
+          btn.classList.add("active");
+          $("#brushCustomColor").value = brushColor.startsWith("#") && brushColor.length === 7 ? brushColor : "#111827";
+          setBrushMode("draw");
+        });
+      }
+
+      // Ukuran kuas
+      const sizesBox = $("#brushSizes");
+      if (sizesBox && !sizesBox.dataset.bound) {
+        sizesBox.dataset.bound = "1";
+        sizesBox.addEventListener("click", e => {
+          const btn = e.target.closest(".brush-size-dot");
+          if (!btn) return;
+          brushSize = +btn.dataset.size;
+          sizesBox.querySelectorAll(".brush-size-dot").forEach(s => s.classList.remove("active"));
+          btn.classList.add("active");
+        });
+      }
+
+      // Custom color
+      const customCol = $("#brushCustomColor");
+      if (customCol && !customCol.dataset.bound) {
+        customCol.dataset.bound = "1";
+        customCol.addEventListener("input", e => {
+          brushColor = e.target.value;
+          swatchesBox.querySelectorAll(".brush-swatch").forEach(s => s.classList.remove("active"));
+          setBrushMode("draw");
+        });
+      }
+
+      // Mode Seg
+      $("#brushModeDraw").onclick = () => setBrushMode("draw");
+      $("#brushModeErase").onclick = () => setBrushMode("erase");
+
+      // Undo & Clear
+      $("#brushUndoBtn").onclick = () => {
+        if (brushHistory.length > 0) {
+          const prev = brushHistory.pop();
+          ctx.putImageData(prev, 0, 0);
+        } else {
+          ctx.clearRect(0, 0, cv.width, cv.height);
+        }
+      };
+      $("#brushClearBtn").onclick = () => {
+        if (!confirm("Bersihkan seluruh kanvas coretan?")) return;
+        saveBrushHistory(cv);
+        ctx.clearRect(0, 0, cv.width, cv.height);
+      };
+
+      if (brushCanvasInited) return;
+      brushCanvasInited = true;
+
+      // Pointer drawing events
+      const getCoords = (e) => {
+        const rect = cv.getBoundingClientRect();
+        return {
+          x: (e.clientX - rect.left) * (cv.width / rect.width),
+          y: (e.clientY - rect.top) * (cv.height / rect.height)
+        };
+      };
+
+      const startDraw = (e) => {
+        e.preventDefault();
+        try { cv.setPointerCapture(e.pointerId); } catch (_) {}
+        isDrawing = true;
+        saveBrushHistory(cv);
+        const pt = getCoords(e);
+        brushPoints = [pt];
+
+        ctx.save();
+        ctx.lineCap = "round";
+        ctx.lineJoin = "round";
+        if (brushMode === "erase") {
+          ctx.globalCompositeOperation = "destination-out";
+          ctx.fillStyle = "rgba(0,0,0,1)";
+        } else {
+          ctx.globalCompositeOperation = "source-over";
+          ctx.fillStyle = brushColor;
+        }
+        ctx.beginPath();
+        ctx.arc(pt.x, pt.y, (brushSize * (brushMode === "erase" ? 2.5 : 1)) / 2, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      };
+
+      const moveDraw = (e) => {
+        if (!isDrawing) return;
+        e.preventDefault();
+        const pt = getCoords(e);
+        brushPoints.push(pt);
+        if (brushPoints.length < 2) return;
+
+        ctx.save();
+        ctx.lineCap = "round";
+        ctx.lineJoin = "round";
+        const effSize = brushSize * (brushMode === "erase" ? 2.5 : 1);
+        ctx.lineWidth = effSize;
+
+        if (brushMode === "erase") {
+          ctx.globalCompositeOperation = "destination-out";
+          ctx.strokeStyle = "rgba(0,0,0,1)";
+        } else {
+          ctx.globalCompositeOperation = "source-over";
+          ctx.strokeStyle = brushColor;
+        }
+
+        const p1 = brushPoints[brushPoints.length - 2];
+        const p2 = brushPoints[brushPoints.length - 1];
+        const midPoint = { x: (p1.x + p2.x) / 2, y: (p1.y + p2.y) / 2 };
+
+        ctx.beginPath();
+        ctx.moveTo(p1.x, p1.y);
+        ctx.quadraticCurveTo(p1.x, p1.y, midPoint.x, midPoint.y);
+        ctx.stroke();
+        ctx.restore();
+      };
+
+      const stopDraw = (e) => {
+        if (isDrawing) {
+          try { cv.releasePointerCapture(e.pointerId); } catch (_) {}
+          isDrawing = false;
+          brushPoints = [];
+        }
+      };
+
+      cv.addEventListener("pointerdown", startDraw);
+      cv.addEventListener("pointermove", moveDraw);
+      cv.addEventListener("pointerup", stopDraw);
+      cv.addEventListener("pointercancel", stopDraw);
+      cv.addEventListener("pointerleave", stopDraw);
+    }
+
+    function setBrushMode(mode) {
+      brushMode = mode;
+      $("#brushModeDraw").classList.toggle("active", mode === "draw");
+      $("#brushModeErase").classList.toggle("active", mode === "erase");
+      $("#brushColorsGroup").style.opacity = mode === "erase" ? "0.4" : "1";
+      $("#brushColorsGroup").style.pointerEvents = mode === "erase" ? "none" : "auto";
+    }
+
+    function openBrushModal(layerId = null) {
+      editingBrushLayerId = layerId;
+      initBrushCanvas();
+      brushHistory = [];
+      const cv = $("#brushCanvas");
+      const ctx = cv.getContext("2d");
+
+      if (layerId) {
+        const l = layers().find(x => x.id === layerId);
+        if (l) {
+          $("#brushModalTitle").textContent = "Edit Coretan Kuas";
+          $("#applyBrushBtnText").textContent = "Simpan Perubahan";
+          ctx.clearRect(0, 0, cv.width, cv.height);
+          const im = l.img || new Image();
+          const drawExisting = () => {
+            const aspect = im.naturalHeight / im.naturalWidth;
+            let dw = Math.min(cv.width * 0.75, 520);
+            let dh = dw * aspect;
+            if (dh > cv.height * 0.75) {
+              dh = cv.height * 0.75;
+              dw = dh / aspect;
+            }
+            const dx = (cv.width - dw) / 2;
+            const dy = (cv.height - dh) / 2;
+            ctx.drawImage(im, dx, dy, dw, dh);
+            saveBrushHistory(cv);
+          };
+          if (im.complete && im.naturalWidth) {
+            drawExisting();
+          } else {
+            im.crossOrigin = "anonymous";
+            im.onload = drawExisting;
+            im.src = l.dataUrl || l.src;
+          }
+        }
+      } else {
+        $("#brushModalTitle").textContent = "Kuas & Coretan Bebas";
+        $("#applyBrushBtnText").textContent = "Pasang di Baju";
+        ctx.clearRect(0, 0, cv.width, cv.height);
+        const autoColor = lum(S.color.hex) > 0.6 ? "#111827" : "#ffffff";
+        brushColor = autoColor;
+        setBrushMode("draw");
+        const swatchesBox = $("#brushSwatches");
+        if (swatchesBox) {
+          swatchesBox.querySelectorAll(".brush-swatch").forEach(s => {
+            s.classList.toggle("active", s.dataset.color.toLowerCase() === autoColor.toLowerCase());
+          });
+        }
+      }
+
+      $("#brushModal").classList.add("show");
+    }
+
+    function closeBrushModal() {
+      $("#brushModal").classList.remove("show");
+      editingBrushLayerId = null;
+    }
+
+    $("#closeBrushModal").onclick = closeBrushModal;
+    $("#cancelBrushBtn").onclick = closeBrushModal;
+    $("#addBrush").onclick = () => openBrushModal();
+
+    $("#applyBrushBtn").onclick = () => {
+      const cv = $("#brushCanvas");
+      const ctx = cv.getContext("2d");
+      const imgData = ctx.getImageData(0, 0, cv.width, cv.height);
+      const data = imgData.data;
+      let minX = cv.width, minY = cv.height, maxX = -1, maxY = -1;
+
+      for (let y = 0; y < cv.height; y++) {
+        for (let x = 0; x < cv.width; x++) {
+          const alpha = data[(y * cv.width + x) * 4 + 3];
+          if (alpha > 8) {
+            if (x < minX) minX = x;
+            if (x > maxX) maxX = x;
+            if (y < minY) minY = y;
+            if (y > maxY) maxY = y;
+          }
+        }
+      }
+
+      if (maxX === -1) {
+        toast("Silakan buat coretan terlebih dahulu.");
+        return;
+      }
+
+      const padding = 16;
+      minX = Math.max(0, minX - padding);
+      minY = Math.max(0, minY - padding);
+      maxX = Math.min(cv.width, maxX + padding);
+      maxY = Math.min(cv.height, maxY + padding);
+
+      const cropW = maxX - minX;
+      const cropH = maxY - minY;
+
+      const cropCv = document.createElement("canvas");
+      cropCv.width = cropW;
+      cropCv.height = cropH;
+      const cropCtx = cropCv.getContext("2d");
+      cropCtx.drawImage(cv, minX, minY, cropW, cropH, 0, 0, cropW, cropH);
+      const dataUrl = cropCv.toDataURL("image/png");
+
+      const img = new Image();
+      img.onload = () => {
+        if (editingBrushLayerId) {
+          const l = layers().find(x => x.id === editingBrushLayerId);
+          if (l) {
+            l.dataUrl = dataUrl;
+            l.src = dataUrl;
+            l.img = img;
+            l.ratio = cropH / cropW;
+          }
+          toast("Coretan kuas berhasil diperbarui!");
+        } else {
+          addLayer({
+            type: "brush",
+            name: "Coretan Kuas",
+            dataUrl: dataUrl,
+            src: dataUrl,
+            img: img,
+            ratio: cropH / cropW,
+            s: 35,
+            r: 0,
+            o: 1,
+            flip: false
+          });
+          toast("Coretan kuas berhasil dipasang di baju!");
+        }
+        redrawAll();
+        closeBrushModal();
+      };
+      img.src = dataUrl;
+    };
+
     $("#layerList").addEventListener("click", e => {
       const row = e.target.closest(".lrow"); if (!row) return;
       const id = +row.dataset.id, act = e.target.dataset.act;
@@ -728,8 +1138,23 @@
             if (l.stroke) { ctx.lineWidth = px * .12; ctx.strokeStyle = l.strokeColor; ctx.strokeText(t, ax, y); }
             ctx.fillText(t, ax, y);
           });
-        } else if (l.type === "image") {
-          const w = l.s / 100 * W; ctx.drawImage(l.img, -w / 2, -w * l.ratio / 2, w, w * l.ratio);
+        } else if (l.type === "image" || l.type === "brush") {
+          let imgObj = l.img;
+          if (!imgObj || !imgObj.complete) {
+            imgObj = await new Promise(r => {
+              const im = new Image();
+              im.crossOrigin = "anonymous";
+              im.onload = () => r(im);
+              im.onerror = () => r(null);
+              im.src = l.src || l.dataUrl;
+            });
+            if (imgObj) l.img = imgObj;
+          }
+          if (imgObj) {
+            const ratio = l.ratio || (imgObj.naturalHeight / imgObj.naturalWidth) || 1;
+            const w = l.s / 100 * W;
+            ctx.drawImage(imgObj, -w / 2, -w * ratio / 2, w, w * ratio);
+          }
         } else {
           const w = l.s / 100 * W; ctx.translate(-w / 2, -w / 2); ctx.scale(w / 100, w / 100);
           const p = new Path2D(SHAPES[l.shape][1]);
@@ -763,6 +1188,10 @@
           for (const l of ls) {
             const { id, img, file, src, ...rest } = l;
             if (l.type === "image") rest.url = file ? await DB.uploadDesign(file) : null;
+            if (l.type === "brush") {
+              rest.dataUrl = l.dataUrl;
+              rest.name = l.name || "Coretan Kuas";
+            }
             if (l.type === "text") {
               const prefix = s === "belakang" ? "[Belakang] " : s.startsWith("lengan") ? `[${s === "lengan_kiri" ? "Lengan Kiri" : "Lengan Kanan"}] ` : "";
               texts.push(prefix + l.text.replace(/\n/g, " / "));
@@ -910,11 +1339,6 @@
         drawSideTabs();
         drawAreas();
         redrawAll();
-      };
-      window.Studio3D.onSurfaceClick = (zone, normX, normY) => {
-        S.side = zone;
-        addLayer(T({ x: normX, y: normY }));
-        toast("Teks berhasil ditambahkan di posisi klik!");
       };
       window.Studio3D.onLayerSelect = (layer) => {
         select(layer.id);

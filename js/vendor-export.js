@@ -107,19 +107,20 @@
             }
             ctx.fillText(t, alignOffset, lineY);
           });
-        } else if (l.type === 'image') {
+        } else if (l.type === 'image' || l.type === 'brush') {
           const sizeW = ((l.s || 30) / 100) * W;
           const ratio = l.ratio || (l.img ? l.img.naturalHeight / l.img.naturalWidth : 1);
           const sizeH = sizeW * ratio;
 
           let imageObj = l.img;
-          if (!imageObj && l.src) {
+          const imgSrc = l.src || l.dataUrl;
+          if (!imageObj && imgSrc) {
             imageObj = await new Promise((resolve) => {
               const img = new Image();
               img.crossOrigin = 'anonymous';
               img.onload = () => resolve(img);
               img.onerror = () => resolve(null);
-              img.src = l.src;
+              img.src = imgSrc;
             });
           }
 

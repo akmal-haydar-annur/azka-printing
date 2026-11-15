@@ -358,10 +358,6 @@
               this.activeSide = detectedZone;
               if (this.onZoneSelect) this.onZoneSelect(detectedZone);
             }
-            // Jika zona ini masih kosong, picu onSurfaceClick agar otomatis menambahkan teks
-            if (layers.length === 0 && this.onSurfaceClick) {
-              this.onSurfaceClick(detectedZone, normX, normY);
-            }
           }
         }
       });
@@ -540,11 +536,17 @@
             }
             ctx.fillStyle = l.color || '#ffffff';
             ctx.fillText(l.text || '', 0, 0);
-          } else if (l.type === 'image' && l.src) {
-            const img = new Image();
-            img.src = l.src;
+          } else if ((l.type === 'image' || l.type === 'brush') && (l.src || l.dataUrl)) {
+            const imgSrc = l.src || l.dataUrl;
+            let img = l.img;
+            if (!img || !(img instanceof HTMLImageElement)) {
+              img = new Image();
+              img.crossOrigin = 'anonymous';
+              img.src = imgSrc;
+              l.img = img;
+            }
             if (img.complete && img.naturalWidth) {
-              const aspect = img.naturalHeight / img.naturalWidth;
+              const aspect = l.ratio || (img.naturalHeight / img.naturalWidth) || 1;
               const iw = baseSize * 2.2;
               const ih = iw * aspect;
               ctx.drawImage(img, -iw / 2, -ih / 2, iw, ih);
