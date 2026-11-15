@@ -10,7 +10,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Anton&family=Bebas+Neue&family=Courier+Prime:ital,wght@0,400;0,700;1,400;1,700&family=Pacifico&family=Permanent+Marker&family=Playfair+Display:ital,wght@0,400;0,700;1,400;1,700&family=Poppins:ital,wght@0,400;0,700;1,400;1,700&family=Righteous&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=7">
+  <link rel="stylesheet" href="css/style.css?v=8">
 </head>
 <body>
   <header id="header"></header>
@@ -19,9 +19,16 @@
     <p class="sub">Pilih warna, buat desain sendiri atau upload desain jadi, atur jumlah, lalu pesan.</p>
 
     <div class="studio" style="margin-top:20px">
-      <!-- Pratinjau -->
+      <!-- Pratinjau (Dual Mode: 2D & 3D Realistis) -->
       <div class="stage">
         <div class="stage-in">
+          <!-- Switcher Mode 2D vs 3D -->
+          <div class="view-switch-seg">
+            <button type="button" class="view-btn on" id="btnView2D">✏️ Editor 2D</button>
+            <button type="button" class="view-btn" id="btnView3D">✨ 3D Realistis</button>
+          </div>
+
+          <!-- Mode 2D Stage Canvas -->
           <div class="seg" id="sideTabs"></div>
           <div class="canvas" id="canvas">
             <div id="shape"></div>
@@ -29,6 +36,18 @@
           </div>
           <div class="areas" id="areas"></div>
           <p class="stage-note" id="stageNote">Pratinjau perkiraan. Tim kami cek ulang posisi desain sebelum produksi.</p>
+
+          <!-- Mode 3D Studio Viewport (Mockey.ai Style) -->
+          <div class="viewport-3d" id="viewport3D" style="display:none">
+            <div class="v3d-controls">
+              <button type="button" class="v3d-btn" id="btnAutoRotate" title="Putar Otomatis 360°">🔄 Putar</button>
+              <button type="button" class="v3d-btn" id="btnResetView" title="Reset Sudut Kamera">🎯 Depan</button>
+              <button type="button" class="v3d-btn" id="btnZoomIn" title="Perbesar">+</button>
+              <button type="button" class="v3d-btn" id="btnZoomOut" title="Perkecil">-</button>
+              <button type="button" class="v3d-btn primary" id="btnSnapshot3D" title="Simpan Foto 3D">📷 Foto 3D</button>
+            </div>
+            <div class="v3d-hint">Seret untuk putar 360° &bull; Scroll untuk zoom</div>
+          </div>
         </div>
       </div>
 
@@ -37,8 +56,14 @@
         <div class="card field"><label class="lbl">Produk</label>
           <select id="product" class="input"></select></div>
 
-        <div class="card field"><label class="lbl">Warna: <span id="colorName" style="font-weight:500"></span></label>
+        <div class="card field"><label class="lbl">Warna Kaos: <span id="colorName" style="font-weight:500"></span></label>
           <div class="swatches" id="swatches"></div></div>
+
+        <!-- Customizer Warna Kerah 3D (Mockey.ai Style) -->
+        <div class="card field" id="neckColorCard" style="display:none">
+          <label class="lbl">Warna Kerah (Rib Neck): <span id="neckColorName" style="font-weight:500">Sama dengan Kaos</span></label>
+          <div class="swatches" id="neckSwatches"></div>
+        </div>
 
         <div class="card field"><label class="lbl">Cara Membuat Desain</label>
           <div class="modes" id="modes">
@@ -109,6 +134,7 @@
   <script src="js/config.js"></script>
   <script src="js/db.js"></script>
   <script src="js/ui.js"></script>
+  <script type="module" src="js/three-studio.js"></script>
   <script>
     renderHeader("studio");
     const $$ = (s, el = document) => [...el.querySelectorAll(s)];
@@ -204,6 +230,9 @@
         ? "Seret elemen untuk memindahkan. Pratinjau perkiraan; tim kami cek ulang posisi sebelum produksi."
         : "Pratinjau perkiraan. Tim kami cek ulang posisi & ukuran desain sebelum produksi.";
       calc();
+      if (window.Studio3D && window.Studio3D.initialized) {
+        window.Studio3D.syncFromStudioState(S);
+      }
     }
 
     const hasSide = s => S.mode === "editor" ? S.sides[s].length > 0 : !!S.up[s];
@@ -285,6 +314,10 @@
       $("#colorName").textContent = S.color.name;
       $("#swatches").innerHTML = S.product.colors.map((c, i) =>
         `<span class="sw ${c.hex === S.color.hex ? "on" : ""}" data-i="${i}" title="${esc(c.name)}" style="background:${c.hex}"></span>`).join("");
+      drawNeckSwatches();
+      if (window.Studio3D && window.Studio3D.initialized) {
+        window.Studio3D.syncFromStudioState(S);
+      }
     }
     function drawMethods() {
       $("#methods").innerHTML = methods.map(m => `
@@ -579,6 +612,93 @@
         btn.disabled = false; btn.textContent = "Konfirmasi Pesanan";
       }
     });
+
+    // ===== Integrasi Preview 3D Realistis (Mockey.ai Style) =====
+    let activeView = "2d";
+    let curNeckColor = null;
+
+    function switchView(view) {
+      activeView = view;
+      $("#btnView2D").classList.toggle("on", view === "2d");
+      $("#btnView3D").classList.toggle("on", view === "3d");
+
+      const is3D = view === "3d";
+      $("#canvas").style.display = is3D ? "none" : "block";
+      $("#sideTabs").style.display = is3D ? "none" : "inline-flex";
+      $("#areas").style.display = is3D ? "none" : "flex";
+      $("#stageNote").style.display = is3D ? "none" : "block";
+      $("#viewport3D").style.display = is3D ? "flex" : "none";
+      if ($("#neckColorCard")) {
+        $("#neckColorCard").style.display = is3D && S.product && S.product.category === "kaos" ? "block" : "none";
+      }
+
+      if (is3D) {
+        if (window.Studio3D) {
+          if (!window.Studio3D.initialized) {
+            window.Studio3D.init($("#viewport3D"));
+          }
+          window.Studio3D.syncFromStudioState(S);
+          if (curNeckColor) window.Studio3D.setNeckColor(curNeckColor.hex);
+          window.Studio3D.onResize();
+        }
+      } else {
+        if (window.Studio3D && window.Studio3D.isAutoRotate) {
+          window.Studio3D.toggleAutoRotate(false);
+          $("#btnAutoRotate").classList.remove("on");
+        }
+      }
+    }
+
+    $("#btnView2D").onclick = () => switchView("2d");
+    $("#btnView3D").onclick = () => switchView("3d");
+
+    // Kontrol Viewport 3D
+    $("#btnAutoRotate").onclick = () => {
+      if (!window.Studio3D) return;
+      const on = window.Studio3D.toggleAutoRotate();
+      $("#btnAutoRotate").classList.toggle("on", on);
+    };
+    $("#btnResetView").onclick = () => {
+      if (window.Studio3D) window.Studio3D.resetCamera();
+    };
+    $("#btnZoomIn").onclick = () => {
+      if (window.Studio3D) window.Studio3D.zoom(1);
+    };
+    $("#btnZoomOut").onclick = () => {
+      if (window.Studio3D) window.Studio3D.zoom(-1);
+    };
+    $("#btnSnapshot3D").onclick = () => {
+      if (!window.Studio3D) return;
+      try {
+        const url = window.Studio3D.exportSnapshot();
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `3D-Mockup-${(S.product ? S.product.name : "Merchandise").replace(/\s+/g, "_")}.png`;
+        a.click();
+        toast("Foto 3D berhasil disimpan!");
+      } catch (e) {
+        toast("Gagal mengambil foto 3D: " + e.message);
+      }
+    };
+
+    function drawNeckSwatches() {
+      const box = $("#neckSwatches");
+      if (!box || !S.product) return;
+      $("#neckColorName").textContent = curNeckColor ? curNeckColor.name : S.color.name;
+      box.innerHTML = S.product.colors.map(c => `
+        <span class="sw ${c.hex === (curNeckColor ? curNeckColor.hex : S.color.hex) ? "on" : ""}" 
+              data-hex="${c.hex}" title="${esc(c.name)}" style="background:${c.hex}"></span>
+      `).join("");
+      $$("#neckSwatches .sw").forEach(sw => {
+        sw.onclick = () => {
+          const hex = sw.dataset.hex;
+          curNeckColor = S.product.colors.find(c => c.hex === hex) || { name: hex, hex };
+          $("#neckColorName").textContent = curNeckColor.name;
+          $$("#neckSwatches .sw").forEach(s => s.classList.toggle("on", s.dataset.hex === hex));
+          if (window.Studio3D) window.Studio3D.setNeckColor(hex);
+        };
+      });
+    }
 
     // ---- Mulai ----
     Promise.all([DB.products(), DB.methods()]).then(([p, m]) => {
