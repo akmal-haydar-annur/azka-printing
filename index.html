@@ -9,37 +9,38 @@
   <meta property="og:image" content="assets/azka-printing-logo.jpeg">
   <meta property="og:title" content="Azka Printing - Cetak Merchandise Komunitas & Distro">
   <meta property="og:description" content="Bebas minimum order, bisa satuan. Diskon otomatis mulai 12 pcs. Buat merchandise kustom kamu sekarang.">
-  <link rel="stylesheet" href="css/style.css?v=6">
+  <link rel="stylesheet" href="css/style.css?v=7">
 </head>
 <body>
   <header id="header"></header>
   <main class="container">
-    <!-- Hero Bento Section -->
+    <!-- Hero Bento Section (Supabase Clean Style) -->
     <section class="hero-bento">
       <div class="hero-content">
         <div class="hero-badge">
           <img src="assets/azka-printing-logo.jpeg" alt="" class="hero-badge-logo">
           <span>Azka Printing Studio &bull; Custom Merchandise</span>
         </div>
-        <h1>Cetak Merchandise.<br><span class="hero-gradient">Bebas minimum order.</span></h1>
-        <p>Sablon DTF tajam, bordir presisi &amp; merchandise distro. Pesan satuan atau ribuan dengan diskon otomatis mulai 12 pcs.</p>
+        <h1>Cetak Merchandise Distro.<br><span class="hero-gradient">Bebas minimum order.</span></h1>
+        <p>Sablon DTF beresolusi tinggi, bordir presisi &amp; merchandise distro berkualitas. Pesan satuan untuk kebutuhan personal atau ribuan pcs untuk komunitas dengan diskon grosir otomatis.</p>
         <div class="hero-actions">
           <a class="btn primary" href="studio.html">Mulai Desain Sekarang ›</a>
-          <a class="btn ghost" href="orders.html">Lacak Pesanan</a>
+          <a class="btn secondary" href="orders.html">Lacak Status Pesanan</a>
         </div>
         <div class="hero-features">
-          <span><i class="f-dot"></i>Bisa Satuan</span>
-          <span><i class="f-dot"></i>Studio Interaktif</span>
+          <span><i class="f-dot"></i>Bisa Satuan (No Minimum)</span>
+          <span><i class="f-dot"></i>Studio Desain Interaktif</span>
           <span><i class="f-dot"></i>Diskon Grosir s.d 15%</span>
           <span><i class="f-dot"></i>Kirim Se-Indonesia</span>
         </div>
       </div>
       <div class="hero-visual">
         <div class="hero-card-preview">
-          <div class="hero-preview-tag">MOCKUP REALISTIS</div>
+          <div class="hero-preview-tag">PREVIEW 3D REALISTIS</div>
           <div class="hero-mockup-wrap" id="heroMockup">
             <!-- Render via script -->
           </div>
+          <div class="hero-color-picker" id="heroColors" style="display:flex;gap:7px;margin:8px 0 2px"></div>
           <div class="hero-preview-meta">
             <div>
               <b>Kaos Combed 30s</b>
@@ -51,7 +52,7 @@
       </div>
     </section>
 
-    <!-- Toolbar: Search Box & Apple Segmented Control -->
+    <!-- Toolbar: Search Box & Supabase Segmented Control -->
     <div class="toolbar">
       <div class="search-box">
         <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
@@ -74,11 +75,35 @@
     const activeColors = {};
     const CATS = { semua: "Semua", kaos: "Kaos", hoodie: "Hoodie", mug: "Mug", totebag: "Totebag", akrilik: "Akrilik" };
 
-    // Render hero mockup preview
-    const heroMockupEl = $("#heroMockup");
-    if (heroMockupEl) {
-      heroMockupEl.innerHTML = productSVG("kaos", "#1f2937");
+    // Interactive Hero Mockup Colors
+    const HERO_COLORS = [
+      { name: "Hijau Logo", hex: "#2d562c" },
+      { name: "Hitam", hex: "#1f2937" },
+      { name: "Navy", hex: "#1e3a8a" },
+      { name: "Merah", hex: "#b91c1c" },
+      { name: "Putih", hex: "#f8fafc" }
+    ];
+    let curHeroHex = "#2d562c";
+
+    function updateHeroMockup(hex) {
+      curHeroHex = hex;
+      const heroMockupEl = $("#heroMockup");
+      if (heroMockupEl) {
+        heroMockupEl.innerHTML = productSVG("kaos", hex);
+      }
+      const heroColorsEl = $("#heroColors");
+      if (heroColorsEl) {
+        heroColorsEl.innerHTML = HERO_COLORS.map(c => `
+          <button class="dot ${c.hex === hex ? "on" : ""}" 
+                  style="background:${c.hex}" 
+                  title="${c.name}" 
+                  onclick="updateHeroMockup('${c.hex}')" 
+                  aria-label="${c.name}">
+          </button>
+        `).join("");
+      }
     }
+    updateHeroMockup(curHeroHex);
 
     function draw() {
       // Segmented control chips
