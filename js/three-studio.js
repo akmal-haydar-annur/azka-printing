@@ -69,6 +69,8 @@
 
       // Callbacks ke UI Studio
       this.onZoneSelect = null;
+      this.onSurfaceClick = null;
+      this.onLayerSelect = null;
       this.onLayerMove = null;
       this.onFileDrop = null;
 
@@ -295,27 +297,26 @@
           const layers = state && state.sides && state.sides[detectedZone] ? state.sides[detectedZone] : [];
 
           // Hit test terhadap layer elemen (dalam rentang koordinat 0..1)
+          let normX = 0.5, normY = 0.5;
+          if (detectedZone === 'depan') {
+            normX = (localPoint.x + 0.12) / 0.24;
+            normY = (0.16 - localPoint.y) / 0.24;
+          } else if (detectedZone === 'belakang') {
+            normX = (-localPoint.x + 0.12) / 0.24;
+            normY = (0.16 - localPoint.y) / 0.24;
+          } else if (detectedZone === 'lengan_kiri') {
+            normX = (localPoint.z + 0.06) / 0.12;
+            normY = (0.12 - localPoint.y) / 0.12;
+          } else if (detectedZone === 'lengan_kanan') {
+            normX = (-localPoint.z + 0.06) / 0.12;
+            normY = (0.12 - localPoint.y) / 0.12;
+          }
+
+          normX = Math.max(0.1, Math.min(0.9, normX));
+          normY = Math.max(0.1, Math.min(0.9, normY));
+
           let clickedLayer = null;
           if (layers.length > 0) {
-            // Perkiraan koordinat UV lokal dalam zona
-            let normX = 0.5, normY = 0.5;
-            if (detectedZone === 'depan') {
-              normX = (localPoint.x + 0.12) / 0.24;
-              normY = (0.16 - localPoint.y) / 0.24;
-            } else if (detectedZone === 'belakang') {
-              normX = (-localPoint.x + 0.12) / 0.24;
-              normY = (0.16 - localPoint.y) / 0.24;
-            } else if (detectedZone === 'lengan_kiri') {
-              normX = (localPoint.z + 0.06) / 0.12;
-              normY = (0.12 - localPoint.y) / 0.12;
-            } else if (detectedZone === 'lengan_kanan') {
-              normX = (-localPoint.z + 0.06) / 0.12;
-              normY = (0.12 - localPoint.y) / 0.12;
-            }
-
-            normX = Math.max(0, Math.min(1, normX));
-            normY = Math.max(0, Math.min(1, normY));
-
             // Cari layer teratas yang berdekatan dengan koordinat klik
             for (let i = layers.length - 1; i >= 0; i--) {
               const l = layers[i];
@@ -334,13 +335,20 @@
               this.dragStartLayerPos = { x: clickedLayer.x, y: clickedLayer.y };
               if (this.controls) this.controls.enabled = false;
               canvasEl.style.cursor = 'grabbing';
+              if (this.onLayerSelect) this.onLayerSelect(clickedLayer);
             }
           }
 
-          // Jika mengklik zona baru tanpa drag layer: aktifkan zona tersebut
-          if (!clickedLayer && detectedZone !== this.activeSide) {
-            this.activeSide = detectedZone;
-            if (this.onZoneSelect) this.onZoneSelect(detectedZone);
+          // Jika mengklik permukaan tanpa mengenai layer yang sudah ada
+          if (!clickedLayer) {
+            if (detectedZone !== this.activeSide) {
+              this.activeSide = detectedZone;
+              if (this.onZoneSelect) this.onZoneSelect(detectedZone);
+            }
+            // Jika zona ini masih kosong, picu onSurfaceClick agar otomatis menambahkan teks
+            if (layers.length === 0 && this.onSurfaceClick) {
+              this.onSurfaceClick(detectedZone, normX, normY);
+            }
           }
         }
       });
