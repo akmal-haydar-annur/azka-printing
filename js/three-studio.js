@@ -26,16 +26,25 @@
     belakang: {
       std: { pos: [0, 0.02, -0.125], rot: [0, Math.PI, 0], size: [0.24, 0.28, 0.20] },
       saku: { pos: [0, 0.13, -0.12], rot: [0, Math.PI, 0], size: [0.12, 0.07, 0.15] },
+      nape: { pos: [0, 0.13, -0.12], rot: [0, Math.PI, 0], size: [0.12, 0.07, 0.15] },
       besar: { pos: [0, -0.02, -0.125], rot: [0, Math.PI, 0], size: [0.26, 0.34, 0.22] },
       full: { pos: [0, -0.02, -0.125], rot: [0, Math.PI, 0], size: [0.26, 0.34, 0.22] }
     },
     lengan_kiri: {
       std: { pos: [-0.24, 0.07, -0.018], rot: [0, -Math.PI / 2, 0], size: [0.11, 0.11, 0.16] },
-      besar: { pos: [-0.24, 0.05, -0.018], rot: [0, -Math.PI / 2, 0], size: [0.10, 0.18, 0.16] }
+      vertikal: { pos: [-0.24, 0.05, -0.018], rot: [0, -Math.PI / 2, 0], size: [0.10, 0.18, 0.16] },
+      besar: { pos: [-0.24, 0.05, -0.018], rot: [0, -Math.PI / 2, 0], size: [0.10, 0.18, 0.16] },
+      full: { pos: [-0.24, 0.05, -0.018], rot: [0, -Math.PI / 2, 0], size: [0.12, 0.20, 0.18] }
     },
     lengan_kanan: {
       std: { pos: [0.24, 0.07, -0.018], rot: [0, Math.PI / 2, 0], size: [0.11, 0.11, 0.16] },
-      besar: { pos: [0.24, 0.05, -0.018], rot: [0, Math.PI / 2, 0], size: [0.10, 0.18, 0.16] }
+      vertikal: { pos: [0.24, 0.05, -0.018], rot: [0, Math.PI / 2, 0], size: [0.10, 0.18, 0.16] },
+      besar: { pos: [0.24, 0.05, -0.018], rot: [0, Math.PI / 2, 0], size: [0.10, 0.18, 0.16] },
+      full: { pos: [0.24, 0.05, -0.018], rot: [0, Math.PI / 2, 0], size: [0.12, 0.20, 0.18] }
+    },
+    kerah: {
+      std: { pos: [0, 0.155, 0.082], rot: [-Math.PI / 4, 0, 0], size: [0.15, 0.07, 0.12] },
+      full: { pos: [0, 0.155, 0.082], rot: [-Math.PI / 4, 0, 0], size: [0.18, 0.09, 0.14] }
     }
   };
 
@@ -62,13 +71,14 @@
       this.tshirtGroup = null;
       this.shirtMesh = null;
 
-      // Multi-Zona Canvases & Decals (depan, belakang, lengan_kiri, lengan_kanan)
+      // Multi-Zona Canvases & Decals (depan, belakang, lengan_kiri, lengan_kanan, kerah)
       this.activeSide = 'depan';
       this.zones = {
         depan: this.createZoneData('depan'),
         belakang: this.createZoneData('belakang'),
         lengan_kiri: this.createZoneData('lengan_kiri'),
-        lengan_kanan: this.createZoneData('lengan_kanan')
+        lengan_kanan: this.createZoneData('lengan_kanan'),
+        kerah: this.createZoneData('kerah')
       };
 
       // Raycaster & Interaksi Langsung di atas 3D
@@ -275,6 +285,7 @@
 
     // 4. Deteksi Zona Permukaan Kaos dari Koordinat Mesh Lokal
     classifySurfaceZone(localPoint) {
+      if (localPoint.y > 0.12 && Math.abs(localPoint.x) < 0.10 && localPoint.z > 0.03) return 'kerah';
       if (localPoint.x < -0.17) return 'lengan_kiri';
       if (localPoint.x > 0.17) return 'lengan_kanan';
       if (localPoint.z < -0.02) return 'belakang';
@@ -325,6 +336,9 @@
           } else if (detectedZone === 'lengan_kanan') {
             normX = (-localPoint.z + 0.06) / 0.12;
             normY = (0.12 - localPoint.y) / 0.12;
+          } else if (detectedZone === 'kerah') {
+            normX = (localPoint.x + 0.075) / 0.15;
+            normY = (0.19 - localPoint.y) / 0.07;
           }
 
           normX = Math.max(0.05, Math.min(0.95, normX));
@@ -415,6 +429,9 @@
             } else if (zone === 'lengan_kanan') {
               curX = (-localPoint.z + 0.06) / 0.12;
               curY = (0.12 - localPoint.y) / 0.12;
+            } else if (zone === 'kerah') {
+              curX = (localPoint.x + 0.075) / 0.15;
+              curY = (0.19 - localPoint.y) / 0.07;
             }
 
             const deltaX = curX - this.dragStartUV.x;
@@ -461,6 +478,9 @@
               } else if (detectedZone === 'lengan_kanan') {
                 normX = (-localPoint.z + 0.06) / 0.12;
                 normY = (0.12 - localPoint.y) / 0.12;
+              } else if (detectedZone === 'kerah') {
+                normX = (localPoint.x + 0.075) / 0.15;
+                normY = (0.19 - localPoint.y) / 0.07;
               }
 
               for (let i = layers.length - 1; i >= 0; i--) {
@@ -488,11 +508,13 @@
       // Pointer Up & Pointer Cancel: Selesaikan drag dan aktifkan kembali OrbitControls
       const onPointerEnd = (e) => {
         if (this.isDragging) {
+          const finishedLayer = this.draggedLayer;
           this.isDragging = false;
           this.draggedLayer = null;
           if (this.controls) this.controls.enabled = true;
           canvasEl.style.cursor = 'default';
           this.requestRender();
+          if (this.onLayerMoveEnd) this.onLayerMoveEnd(finishedLayer);
         } else if (this.pointerDownPos && e) {
           // Deteksi apakah aksi pointer adalah klik/tap biasa (bukan drag kamera 3D)
           const dist = Math.hypot(e.clientX - this.pointerDownPos.x, e.clientY - this.pointerDownPos.y);
@@ -554,7 +576,7 @@
       }
 
       if (this.modelLoaded) {
-        ['depan', 'belakang', 'lengan_kiri', 'lengan_kanan'].forEach((zone) => {
+        ['depan', 'belakang', 'lengan_kiri', 'lengan_kanan', 'kerah'].forEach((zone) => {
           this.renderZoneToCanvas(S, zone);
           const zData = this.zones[zone];
           if (zData && zData.texture) {
@@ -796,7 +818,7 @@
     }
 
     updateAllDecals() {
-      ['depan', 'belakang', 'lengan_kiri', 'lengan_kanan'].forEach((zone) => {
+      ['depan', 'belakang', 'lengan_kiri', 'lengan_kanan', 'kerah'].forEach((zone) => {
         this.updateZoneDecal(zone, this.cachedStudioState ? this.cachedStudioState.area : 'std');
       });
     }
@@ -810,12 +832,17 @@
         depan: [0, 0.0, 2.45],
         belakang: [0, 0.0, -2.45],
         lengan_kiri: [-2.45, 0.04, 0],
-        lengan_kanan: [2.45, 0.04, 0]
+        lengan_kanan: [2.45, 0.04, 0],
+        kerah: [0, 0.55, 1.65]
       };
 
       const pos = targets[angleKey] || targets.depan;
       this.camera.position.set(pos[0], pos[1], pos[2]);
-      this.controls.target.set(0, 0, 0);
+      if (angleKey === 'kerah') {
+        this.controls.target.set(0, 0.16, 0.04);
+      } else {
+        this.controls.target.set(0, 0, 0);
+      }
       this.controls.update();
       this.requestRender();
     }
@@ -864,7 +891,7 @@
       const prevSel = this.cachedStudioState ? this.cachedStudioState.sel : null;
       if (prevSel) {
         this.cachedStudioState.sel = null;
-        ['depan', 'belakang', 'lengan_kiri', 'lengan_kanan'].forEach((z) => {
+        ['depan', 'belakang', 'lengan_kiri', 'lengan_kanan', 'kerah'].forEach((z) => {
           this.renderZoneToCanvas(this.cachedStudioState, z);
           if (this.zones[z]?.texture) this.zones[z].texture.needsUpdate = true;
         });
@@ -873,7 +900,7 @@
       const url = this.renderer.domElement.toDataURL('image/png');
       if (prevSel) {
         this.cachedStudioState.sel = prevSel;
-        ['depan', 'belakang', 'lengan_kiri', 'lengan_kanan'].forEach((z) => {
+        ['depan', 'belakang', 'lengan_kiri', 'lengan_kanan', 'kerah'].forEach((z) => {
           this.renderZoneToCanvas(this.cachedStudioState, z);
           if (this.zones[z]?.texture) this.zones[z].texture.needsUpdate = true;
         });
@@ -881,14 +908,14 @@
       return url;
     }
 
-    // Tangkap Mockup Visual untuk Angle Tertentu (Depan, Belakang, Lengan)
+    // Tangkap Mockup Visual untuk Angle Tertentu (Depan, Belakang, Lengan, Kerah)
     exportAngleSnapshot(angleKey) {
       if (!this.renderer || !this.scene || !this.camera) return null;
       const prevPos = this.camera.position.clone();
       const prevSel = this.cachedStudioState ? this.cachedStudioState.sel : null;
       if (prevSel) {
         this.cachedStudioState.sel = null;
-        ['depan', 'belakang', 'lengan_kiri', 'lengan_kanan'].forEach((z) => {
+        ['depan', 'belakang', 'lengan_kiri', 'lengan_kanan', 'kerah'].forEach((z) => {
           this.renderZoneToCanvas(this.cachedStudioState, z);
           if (this.zones[z]?.texture) this.zones[z].texture.needsUpdate = true;
         });
@@ -902,7 +929,7 @@
       this.camera.position.copy(prevPos);
       if (prevSel) {
         this.cachedStudioState.sel = prevSel;
-        ['depan', 'belakang', 'lengan_kiri', 'lengan_kanan'].forEach((z) => {
+        ['depan', 'belakang', 'lengan_kiri', 'lengan_kanan', 'kerah'].forEach((z) => {
           this.renderZoneToCanvas(this.cachedStudioState, z);
           if (this.zones[z]?.texture) this.zones[z].texture.needsUpdate = true;
         });

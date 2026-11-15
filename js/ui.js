@@ -49,9 +49,168 @@ function toast(msg) {
   setTimeout(() => t.classList.remove("show"), 3200);
 }
 
-// Gambar produk (SVG Realistis Apple-Grade) berwarna sesuai pilihan warna
-function productSVG(category, color = "#1f2937") {
+// Gambar produk (SVG Realistis Apple-Grade & Pola Potong Apparel Terpisah)
+function productSVG(category, color = "#1f2937", side = "assembled") {
   const c = color || "#1f2937";
+
+  // Pola Potong Terpisah untuk Apparel (Kaos & Hoodie Sublimasi)
+  const patternPieces = {
+    depan: `
+      <defs>
+        <pattern id="cutGridDepan" width="12" height="12" patternUnits="userSpaceOnUse">
+          <path d="M 12 0 L 0 0 0 12" fill="none" stroke="rgba(0,0,0,.035)" stroke-width="0.5"/>
+        </pattern>
+      </defs>
+      <rect width="200" height="220" fill="#f8fafc"/>
+      <rect width="200" height="220" fill="url(#cutGridDepan)"/>
+
+      <!-- Pola Potong Badan Depan (Lekukan Leher Lebih Dalam / Scoop Neck) -->
+      <path d="M 72 26 Q 100 66 128 26 L 158 32 Q 152 64 154 90 L 156 208 L 44 208 L 46 90 Q 48 64 42 32 Z" fill="${c}" stroke="rgba(0,0,0,.28)" stroke-width="1.5" stroke-linejoin="round"/>
+
+      <!-- Garis Panduan Kampuh Jahit 1cm (Dashed Seam Allowance) -->
+      <path d="M 74 30 Q 100 68 126 30 L 154 36 Q 148 64 150 90 L 152 204 L 48 204 L 50 90 Q 52 64 46 36 Z" fill="none" stroke="rgba(255,255,255,.32)" stroke-width="1" stroke-dasharray="2.5,2.5"/>
+
+      <!-- Detail Lipatan Kelim Bawah (Bottom Hem Stitch) -->
+      <line x1="46" y1="202" x2="154" y2="202" stroke="rgba(0,0,0,.22)" stroke-width="1.2" stroke-dasharray="3,2"/>
+      <line x1="46" y1="205" x2="154" y2="205" stroke="rgba(0,0,0,.15)" stroke-width="1" stroke-dasharray="3,2"/>
+
+      <!-- Garis Arah Serat Kain (Grainline Arrow) -->
+      <path d="M 100 85 L 100 175 M 97 90 L 100 85 L 103 90 M 97 170 L 100 175 L 103 170" stroke="rgba(255,255,255,.45)" stroke-width="1.2" fill="none"/>
+      
+      <!-- Label Bagian Pola -->
+      <text x="100" y="80" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,sans-serif" font-size="7" font-weight="700" letter-spacing="1" fill="rgba(255,255,255,.7)">BADAN DEPAN</text>
+      <text x="100" y="190" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,sans-serif" font-size="6" font-weight="600" fill="rgba(255,255,255,.45)">POTONG 1x &bull; SUBLIMASI</text>
+    `,
+    belakang: `
+      <defs>
+        <pattern id="cutGridBelakang" width="12" height="12" patternUnits="userSpaceOnUse">
+          <path d="M 12 0 L 0 0 0 12" fill="none" stroke="rgba(0,0,0,.035)" stroke-width="0.5"/>
+        </pattern>
+      </defs>
+      <rect width="200" height="220" fill="#f8fafc"/>
+      <rect width="200" height="220" fill="url(#cutGridBelakang)"/>
+
+      <!-- Pola Potong Badan Belakang (Lekukan Leher Dangkal / Kerung Tinggi) -->
+      <path d="M 72 26 Q 100 38 128 26 L 158 32 Q 152 64 154 90 L 156 208 L 44 208 L 46 90 Q 48 64 42 32 Z" fill="${c}" stroke="rgba(0,0,0,.28)" stroke-width="1.5" stroke-linejoin="round"/>
+
+      <!-- Garis Panduan Kampuh Jahit (Seam Allowance) -->
+      <path d="M 74 29 Q 100 40 126 29 L 154 35 Q 148 64 150 90 L 152 204 L 48 204 L 50 90 Q 52 64 46 35 Z" fill="none" stroke="rgba(255,255,255,.32)" stroke-width="1" stroke-dasharray="2.5,2.5"/>
+
+      <!-- Bottom Hem Stitch -->
+      <line x1="46" y1="202" x2="154" y2="202" stroke="rgba(0,0,0,.22)" stroke-width="1.2" stroke-dasharray="3,2"/>
+      <line x1="46" y1="205" x2="154" y2="205" stroke="rgba(0,0,0,.15)" stroke-width="1" stroke-dasharray="3,2"/>
+
+      <!-- Grainline Arrow -->
+      <path d="M 100 65 L 100 175 M 97 70 L 100 65 L 103 70 M 97 170 L 100 175 L 103 170" stroke="rgba(255,255,255,.45)" stroke-width="1.2" fill="none"/>
+
+      <!-- Label Bagian Pola -->
+      <text x="100" y="60" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,sans-serif" font-size="7" font-weight="700" letter-spacing="1" fill="rgba(255,255,255,.7)">BADAN BELAKANG</text>
+      <text x="100" y="190" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,sans-serif" font-size="6" font-weight="600" fill="rgba(255,255,255,.45)">POTONG 1x &bull; SUBLIMASI</text>
+    `,
+    lengan_kiri: `
+      <defs>
+        <pattern id="cutGridLk" width="12" height="12" patternUnits="userSpaceOnUse">
+          <path d="M 12 0 L 0 0 0 12" fill="none" stroke="rgba(0,0,0,.035)" stroke-width="0.5"/>
+        </pattern>
+      </defs>
+      <rect width="200" height="220" fill="#f8fafc"/>
+      <rect width="200" height="220" fill="url(#cutGridLk)"/>
+
+      <!-- Pola Potong Lengan Kiri (Bentuk Lonceng / Bell-Shaped Sleeve Cap) -->
+      <path d="M 24 116 C 36 82 66 38 100 38 C 134 38 164 82 176 116 L 158 202 Q 100 206 42 202 Z" fill="${c}" stroke="rgba(0,0,0,.28)" stroke-width="1.5" stroke-linejoin="round"/>
+
+      <!-- Seam allowance guide -->
+      <path d="M 28 116 C 38 85 68 43 100 43 C 132 43 162 85 172 116 L 154 198 Q 100 202 46 198 Z" fill="none" stroke="rgba(255,255,255,.32)" stroke-width="1" stroke-dasharray="2.5,2.5"/>
+
+      <!-- Cuff Hem Stitch -->
+      <line x1="44" y1="196" x2="156" y2="196" stroke="rgba(0,0,0,.22)" stroke-width="1.2" stroke-dasharray="3,2"/>
+      <line x1="43" y1="199" x2="157" y2="199" stroke="rgba(0,0,0,.15)" stroke-width="1" stroke-dasharray="3,2"/>
+
+      <!-- Notches Titik Jahit Lengan -->
+      <line x1="44" y1="68" x2="38" y2="64" stroke="rgba(0,0,0,.45)" stroke-width="1.5"/>
+      <line x1="48" y1="72" x2="42" y2="68" stroke="rgba(0,0,0,.45)" stroke-width="1.5"/>
+      <line x1="156" y1="68" x2="162" y2="64" stroke="rgba(0,0,0,.45)" stroke-width="1.5"/>
+
+      <!-- Grainline Arrow -->
+      <path d="M 100 80 L 100 170 M 97 85 L 100 80 L 103 85 M 97 165 L 100 170 L 103 165" stroke="rgba(255,255,255,.45)" stroke-width="1.2" fill="none"/>
+      
+      <text x="100" y="75" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,sans-serif" font-size="7" font-weight="700" letter-spacing="1" fill="rgba(255,255,255,.7)">LENGAN KIRI</text>
+      <text x="100" y="184" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,sans-serif" font-size="6" font-weight="600" fill="rgba(255,255,255,.45)">POTONG 1x &bull; SUBLIMASI</text>
+    `,
+    lengan_kanan: `
+      <defs>
+        <pattern id="cutGridLkn" width="12" height="12" patternUnits="userSpaceOnUse">
+          <path d="M 12 0 L 0 0 0 12" fill="none" stroke="rgba(0,0,0,.035)" stroke-width="0.5"/>
+        </pattern>
+      </defs>
+      <rect width="200" height="220" fill="#f8fafc"/>
+      <rect width="200" height="220" fill="url(#cutGridLkn)"/>
+
+      <!-- Pola Potong Lengan Kanan (Bentuk Lonceng / Bell-Shaped Mirrored) -->
+      <path d="M 24 116 C 36 82 66 38 100 38 C 134 38 164 82 176 116 L 158 202 Q 100 206 42 202 Z" fill="${c}" stroke="rgba(0,0,0,.28)" stroke-width="1.5" stroke-linejoin="round"/>
+
+      <path d="M 28 116 C 38 85 68 43 100 43 C 132 43 162 85 172 116 L 154 198 Q 100 202 46 198 Z" fill="none" stroke="rgba(255,255,255,.32)" stroke-width="1" stroke-dasharray="2.5,2.5"/>
+
+      <line x1="44" y1="196" x2="156" y2="196" stroke="rgba(0,0,0,.22)" stroke-width="1.2" stroke-dasharray="3,2"/>
+      <line x1="43" y1="199" x2="157" y2="199" stroke="rgba(0,0,0,.15)" stroke-width="1" stroke-dasharray="3,2"/>
+
+      <!-- Notches Mirrored -->
+      <line x1="44" y1="68" x2="38" y2="64" stroke="rgba(0,0,0,.45)" stroke-width="1.5"/>
+      <line x1="152" y1="72" x2="158" y2="68" stroke="rgba(0,0,0,.45)" stroke-width="1.5"/>
+      <line x1="156" y1="68" x2="162" y2="64" stroke="rgba(0,0,0,.45)" stroke-width="1.5"/>
+
+      <!-- Grainline Arrow -->
+      <path d="M 100 80 L 100 170 M 97 85 L 100 80 L 103 85 M 97 165 L 100 170 L 103 165" stroke="rgba(255,255,255,.45)" stroke-width="1.2" fill="none"/>
+
+      <text x="100" y="75" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,sans-serif" font-size="7" font-weight="700" letter-spacing="1" fill="rgba(255,255,255,.7)">LENGAN KANAN</text>
+      <text x="100" y="184" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,sans-serif" font-size="6" font-weight="600" fill="rgba(255,255,255,.45)">POTONG 1x &bull; SUBLIMASI</text>
+    `,
+    kerah: `
+      <defs>
+        <pattern id="cutGridKerah" width="12" height="12" patternUnits="userSpaceOnUse">
+          <path d="M 12 0 L 0 0 0 12" fill="none" stroke="rgba(0,0,0,.035)" stroke-width="0.5"/>
+        </pattern>
+      </defs>
+      <rect width="200" height="220" fill="#f8fafc"/>
+      <rect width="200" height="220" fill="url(#cutGridKerah)"/>
+
+      <!-- Pola Kerah / Rib Leher Strip -->
+      <rect x="20" y="72" width="160" height="76" rx="3" fill="${c}" stroke="rgba(0,0,0,.28)" stroke-width="1.5"/>
+
+      <!-- Garis Lipat Tengah (Fold Line) -->
+      <line x1="20" y1="110" x2="180" y2="110" stroke="rgba(255,255,255,.6)" stroke-width="1.2" stroke-dasharray="4,3"/>
+
+      <!-- Tekstur Rajut Rib Vertikal -->
+      <g stroke="rgba(0,0,0,.08)" stroke-width="1">
+        <line x1="32" y1="72" x2="32" y2="148"/>
+        <line x1="44" y1="72" x2="44" y2="148"/>
+        <line x1="56" y1="72" x2="56" y2="148"/>
+        <line x1="68" y1="72" x2="68" y2="148"/>
+        <line x1="80" y1="72" x2="80" y2="148"/>
+        <line x1="92" y1="72" x2="92" y2="148"/>
+        <line x1="104" y1="72" x2="104" y2="148"/>
+        <line x1="116" y1="72" x2="116" y2="148"/>
+        <line x1="128" y1="72" x2="128" y2="148"/>
+        <line x1="140" y1="72" x2="140" y2="148"/>
+        <line x1="152" y1="72" x2="152" y2="148"/>
+        <line x1="164" y1="72" x2="164" y2="148"/>
+      </g>
+
+      <!-- Panah Tarikan Melar (Stretch Direction) -->
+      <path d="M 40 92 L 160 92 M 46 89 L 40 92 L 46 95 M 154 89 L 160 92 L 154 95" stroke="rgba(255,255,255,.65)" stroke-width="1.2" fill="none"/>
+      
+      <text x="100" y="88" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,sans-serif" font-size="6.5" font-weight="700" letter-spacing="1" fill="rgba(255,255,255,.85)">ARAH REGANGAN (STRETCH)</text>
+      <text x="100" y="125" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,sans-serif" font-size="7" font-weight="700" letter-spacing="1" fill="rgba(255,255,255,.85)">GARIS LIPAT TENGAH (FOLD)</text>
+      <text x="100" y="138" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,sans-serif" font-size="6" font-weight="600" fill="rgba(255,255,255,.5)">KERAH RIB &bull; POTONG 1x (45 x 4 cm)</text>
+    `
+  };
+
+  // Jika produk apparel dan sisi pola terpisah diminta
+  if ((category === "kaos" || category === "hoodie") && patternPieces[side]) {
+    return `<svg viewBox="0 0 200 220" xmlns="http://www.w3.org/2000/svg" role="img">${patternPieces[side]}</svg>`;
+  }
+
+  // Tampilan Produk Jadi (Assembled Mockup) - Untuk Katalog, Pesanan & Admin
   const shapes = {
     kaos: `
       <!-- Base Shirt Body -->
@@ -157,6 +316,83 @@ function productSVG(category, color = "#1f2937") {
     `
   };
   return `<svg viewBox="0 0 200 220" xmlns="http://www.w3.org/2000/svg" role="img">${shapes[category] || shapes.kaos}</svg>`;
+}
+
+// Render Seluruh 5 Bagian Pola Potong dalam Satu Lembar Kerja (Layout Sheet persis Gambar Referensi)
+function allPatternPiecesSVG(color = "#1f2937", sidesContent = {}) {
+  const c = color || "#1f2937";
+  return `
+    <svg viewBox="0 0 460 480" xmlns="http://www.w3.org/2000/svg" role="img" class="pola-utuh-svg" style="width:100%;height:auto;max-height:75vh;border-radius:10px;box-shadow:0 4px 20px rgba(0,0,0,.08);background:#e2e8f0;">
+      <!-- Background Meja Potong Industri -->
+      <defs>
+        <pattern id="masterCutGrid" width="16" height="16" patternUnits="userSpaceOnUse">
+          <path d="M 16 0 L 0 0 0 16" fill="none" stroke="rgba(0,0,0,.04)" stroke-width="0.7"/>
+        </pattern>
+      </defs>
+      <rect width="460" height="480" fill="#e2e8f0"/>
+      <rect width="460" height="480" fill="url(#masterCutGrid)"/>
+
+      <!-- Header Spesifikasi Produksi Sublimasi Kaos Olahraga -->
+      <rect x="16" y="14" width="428" height="28" rx="4" fill="#0f172a"/>
+      <text x="30" y="32" font-family="-apple-system,BlinkMacSystemFont,sans-serif" font-size="10.5" font-weight="800" fill="#ffffff" letter-spacing="1">/// SPORTS T-SHIRT FOR MEN /// LEMBAR POLA POTONG UTUH</text>
+      <rect x="385" y="18" width="50" height="20" rx="3" fill="#eab308"/>
+      <text x="410" y="32" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,sans-serif" font-size="9" font-weight="900" fill="#0f172a">SIZE M</text>
+
+      <!-- 1. Lengan Kiri (Kiri Atas) -->
+      <g class="pola-piece-group" data-side="lengan_kiri" transform="translate(24, 52) scale(0.82)" style="cursor:pointer;">
+        <path d="M 24 116 C 36 82 66 38 100 38 C 134 38 164 82 176 116 L 158 202 Q 100 206 42 202 Z" fill="${c}" stroke="#0f172a" stroke-width="1.8" stroke-linejoin="round"/>
+        <path d="M 28 116 C 38 85 68 43 100 43 C 132 43 162 85 172 116 L 154 198 Q 100 202 46 198 Z" fill="none" stroke="rgba(255,255,255,.3)" stroke-width="1" stroke-dasharray="2,2"/>
+        <line x1="44" y1="196" x2="156" y2="196" stroke="rgba(0,0,0,.25)" stroke-width="1" stroke-dasharray="3,2"/>
+        <text x="100" y="125" text-anchor="middle" font-family="-apple-system,sans-serif" font-size="9.5" font-weight="700" fill="rgba(255,255,255,.85)" letter-spacing="0.5">LENGAN KIRI</text>
+        <text x="100" y="142" text-anchor="middle" font-family="-apple-system,sans-serif" font-size="7" font-weight="600" fill="rgba(255,255,255,.5)">POTONG 1x &bull; KLIK EDIT</text>
+      </g>
+
+      <!-- 2. Kerah / Rib Leher (Tengah Vertikal Persis Gambar Referensi) -->
+      <g class="pola-piece-group" data-side="kerah" transform="translate(216, 52)" style="cursor:pointer;">
+        <rect x="0" y="0" width="28" height="175" rx="3" fill="${c}" stroke="#0f172a" stroke-width="1.8"/>
+        <line x1="14" y1="0" x2="14" y2="175" stroke="rgba(255,255,255,.55)" stroke-width="1.2" stroke-dasharray="4,3"/>
+        <g stroke="rgba(0,0,0,.1)" stroke-width="1">
+          <line x1="0" y1="25" x2="28" y2="25"/>
+          <line x1="0" y1="50" x2="28" y2="50"/>
+          <line x1="0" y1="75" x2="28" y2="75"/>
+          <line x1="0" y1="100" x2="28" y2="100"/>
+          <line x1="0" y1="125" x2="28" y2="125"/>
+          <line x1="0" y1="150" x2="28" y2="150"/>
+        </g>
+        <text x="14" y="88" transform="rotate(-90 14 88)" text-anchor="middle" font-family="-apple-system,sans-serif" font-size="7.5" font-weight="700" fill="rgba(255,255,255,.85)" letter-spacing="0.8">KERAH / RIB LEHER</text>
+      </g>
+
+      <!-- 3. Lengan Kanan (Kanan Atas) -->
+      <g class="pola-piece-group" data-side="lengan_kanan" transform="translate(268, 52) scale(0.82)" style="cursor:pointer;">
+        <path d="M 24 116 C 36 82 66 38 100 38 C 134 38 164 82 176 116 L 158 202 Q 100 206 42 202 Z" fill="${c}" stroke="#0f172a" stroke-width="1.8" stroke-linejoin="round"/>
+        <path d="M 28 116 C 38 85 68 43 100 43 C 132 43 162 85 172 116 L 154 198 Q 100 202 46 198 Z" fill="none" stroke="rgba(255,255,255,.3)" stroke-width="1" stroke-dasharray="2,2"/>
+        <line x1="44" y1="196" x2="156" y2="196" stroke="rgba(0,0,0,.25)" stroke-width="1" stroke-dasharray="3,2"/>
+        <text x="100" y="125" text-anchor="middle" font-family="-apple-system,sans-serif" font-size="9.5" font-weight="700" fill="rgba(255,255,255,.85)" letter-spacing="0.5">LENGAN KANAN</text>
+        <text x="100" y="142" text-anchor="middle" font-family="-apple-system,sans-serif" font-size="7" font-weight="600" fill="rgba(255,255,255,.5)">POTONG 1x &bull; KLIK EDIT</text>
+      </g>
+
+      <!-- 4. Badan Depan (Kiri Bawah) -->
+      <g class="pola-piece-group" data-side="depan" transform="translate(18, 235) scale(0.96)" style="cursor:pointer;">
+        <path d="M 72 26 Q 100 66 128 26 L 158 32 Q 152 64 154 90 L 156 208 L 44 208 L 46 90 Q 48 64 42 32 Z" fill="${c}" stroke="#0f172a" stroke-width="1.8" stroke-linejoin="round"/>
+        <path d="M 74 30 Q 100 68 126 30 L 154 36 Q 148 64 150 90 L 152 204 L 48 204 L 50 90 Q 52 64 46 36 Z" fill="none" stroke="rgba(255,255,255,.3)" stroke-width="1" stroke-dasharray="2,2"/>
+        <line x1="46" y1="202" x2="154" y2="202" stroke="rgba(0,0,0,.25)" stroke-width="1" stroke-dasharray="3,2"/>
+        <text x="100" y="115" text-anchor="middle" font-family="-apple-system,sans-serif" font-size="10" font-weight="800" fill="rgba(255,255,255,.9)" letter-spacing="0.5">BADAN DEPAN</text>
+        <text x="100" y="132" text-anchor="middle" font-family="-apple-system,sans-serif" font-size="7.5" font-weight="600" fill="rgba(255,255,255,.55)">LEHER DALAM &bull; KLIK EDIT</text>
+      </g>
+
+      <!-- 5. Badan Belakang (Kanan Bawah) -->
+      <g class="pola-piece-group" data-side="belakang" transform="translate(232, 235) scale(0.96)" style="cursor:pointer;">
+        <path d="M 72 26 Q 100 38 128 26 L 158 32 Q 152 64 154 90 L 156 208 L 44 208 L 46 90 Q 48 64 42 32 Z" fill="${c}" stroke="#0f172a" stroke-width="1.8" stroke-linejoin="round"/>
+        <path d="M 74 29 Q 100 40 126 29 L 154 35 Q 148 64 150 90 L 152 204 L 48 204 L 50 90 Q 52 64 46 35 Z" fill="none" stroke="rgba(255,255,255,.3)" stroke-width="1" stroke-dasharray="2,2"/>
+        <line x1="46" y1="202" x2="154" y2="202" stroke="rgba(0,0,0,.25)" stroke-width="1" stroke-dasharray="3,2"/>
+        <text x="100" y="115" text-anchor="middle" font-family="-apple-system,sans-serif" font-size="10" font-weight="800" fill="rgba(255,255,255,.9)" letter-spacing="0.5">BADAN BELAKANG</text>
+        <text x="100" y="132" text-anchor="middle" font-family="-apple-system,sans-serif" font-size="7.5" font-weight="600" fill="rgba(255,255,255,.55)">LEHER DANGKAL &bull; KLIK EDIT</text>
+      </g>
+
+      <!-- Footer Info -->
+      <text x="230" y="468" text-anchor="middle" font-family="-apple-system,sans-serif" font-size="7.5" font-weight="600" fill="#64748b">AZKA PRINTING &bull; SUB-ZERO PATTERN CUTTING SPECIFICATION &bull; KLIK BAGIAN MANAPUN UNTUK MENGEDIT</text>
+    </svg>
+  `;
 }
 
 // ----- Tampilan desain pada item pesanan (dipakai orders.html & admin.html) -----

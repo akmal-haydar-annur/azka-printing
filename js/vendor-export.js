@@ -38,6 +38,10 @@
     lengan_kanan: {
       std: { name: 'Lengan Kanan Standar', w: 8, h: 8, offsetShoulder: 3 },
       besar: { name: 'Lengan Kanan Bendera/Patch', w: 8, h: 5, offsetShoulder: 3 }
+    },
+    kerah: {
+      std: { name: 'Kerah / Rib Leher', w: 45, h: 4, offsetNeck: 0 },
+      full: { name: 'Kerah / Rib Full Pattern', w: 48, h: 4.5, offsetNeck: 0 }
     }
   };
 
@@ -396,7 +400,7 @@
       const results = { files: [] };
 
       // 1. Generate 300 DPI Transparent Artwork untuk setiap sisi yang ada layer
-      const sides = ['depan', 'belakang', 'lengan_kiri', 'lengan_kanan'];
+      const sides = ['depan', 'belakang', 'lengan_kiri', 'lengan_kanan', 'kerah'];
       for (const s of sides) {
         const layers = orderData.sides ? orderData.sides[s] : [];
         if (layers && layers.length > 0) {

@@ -531,8 +531,9 @@ textarea.input{font-family:inherit;resize:vertical}
   backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
   padding:4px 6px;border-radius:var(--radius-pill);border:1px solid var(--line);
   box-shadow:0 6px 20px -3px rgba(0,0,0,.09);z-index:10;
-  white-space:nowrap;flex-wrap:nowrap;
+  white-space:nowrap;flex-wrap:nowrap;max-width:96%;overflow-x:auto;scrollbar-width:none;
 }
+.v3d-controls::-webkit-scrollbar{display:none}
 .viewport-3d.v3d-dragover{
   outline:2px dashed var(--primary);
   outline-offset:-8px;
@@ -781,4 +782,18 @@ textarea.input{font-family:inherit;resize:vertical}
   .modal.brush-modal { padding: 14px; }
   .brush-canvas-container { height: 230px; }
   .brush-palette-bar { flex-direction: column; align-items: flex-start; gap: 8px; }
+}
+
+/* Pola Potong Utuh Interaktif */
+.pola-piece-group {
+  transition: transform .2s var(--ease-apple), opacity .2s var(--ease-apple), filter .2s var(--ease-apple);
+}
+.pola-piece-group:hover {
+  filter: drop-shadow(0 6px 14px rgba(45,86,44,.3));
+  opacity: 0.98;
+}
+.pola-piece-group:hover path,
+.pola-piece-group:hover rect {
+  stroke: #16a34a !important;
+  stroke-width: 2.2 !important;
 }
