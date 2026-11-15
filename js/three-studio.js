@@ -1,6 +1,6 @@
 // ====================================================================
 // three-studio.js - 3D Mockup Studio Engine (Mockey.ai Style)
-// Authentic Open-Source 3D T-Shirt GLTF Model + Decal Projection Engine
+// Authentic Multi-Zone GLTF Model + Direct On-3D Editing Engine
 // ====================================================================
 
 (function (root, factory) {
@@ -14,6 +14,31 @@
 })(typeof self !== 'undefined' ? self : this, function () {
   'use strict';
 
+  // Konfigurasi posisi dan dimensi proyektor Decal per zona pada model shirt_baked.glb
+  const ZONE_DECAL_CONFIG = {
+    depan: {
+      std: { pos: [0, 0.04, 0.15], rot: [0, 0, 0], size: [0.22, 0.24, 0.20] },
+      saku: { pos: [-0.07, 0.06, 0.14], rot: [0, 0, 0], size: [0.11, 0.11, 0.16] },
+      dada_kanan: { pos: [0.07, 0.06, 0.14], rot: [0, 0, 0], size: [0.11, 0.11, 0.16] },
+      besar: { pos: [0, -0.01, 0.145], rot: [0, 0, 0], size: [0.25, 0.32, 0.22] },
+      full: { pos: [0, -0.01, 0.145], rot: [0, 0, 0], size: [0.25, 0.32, 0.22] }
+    },
+    belakang: {
+      std: { pos: [0, 0.02, -0.125], rot: [0, Math.PI, 0], size: [0.24, 0.28, 0.20] },
+      saku: { pos: [0, 0.13, -0.12], rot: [0, Math.PI, 0], size: [0.12, 0.07, 0.15] },
+      besar: { pos: [0, -0.02, -0.125], rot: [0, Math.PI, 0], size: [0.26, 0.34, 0.22] },
+      full: { pos: [0, -0.02, -0.125], rot: [0, Math.PI, 0], size: [0.26, 0.34, 0.22] }
+    },
+    lengan_kiri: {
+      std: { pos: [-0.24, 0.07, -0.018], rot: [0, -Math.PI / 2, 0], size: [0.11, 0.11, 0.16] },
+      besar: { pos: [-0.24, 0.05, -0.018], rot: [0, -Math.PI / 2, 0], size: [0.10, 0.18, 0.16] }
+    },
+    lengan_kanan: {
+      std: { pos: [0.24, 0.07, -0.018], rot: [0, Math.PI / 2, 0], size: [0.11, 0.11, 0.16] },
+      besar: { pos: [0.24, 0.05, -0.018], rot: [0, Math.PI / 2, 0], size: [0.10, 0.18, 0.16] }
+    }
+  };
+
   class Studio3DEngine {
     constructor() {
       this.container = null;
@@ -23,24 +48,54 @@
       this.controls = null;
       this.tshirtGroup = null;
       this.shirtMesh = null;
-      this.decalMesh = null;
-      this.decalMaterial = null;
 
-      // 2D -> 3D Dynamic Design Canvas Texture
-      this.frontCanvas = document.createElement('canvas');
-      this.frontCanvas.width = 1024;
-      this.frontCanvas.height = 1024;
-      this.frontCtx = this.frontCanvas.getContext('2d');
-      this.frontTexture = null;
+      // Multi-Zona Canvases & Decals (depan, belakang, lengan_kiri, lengan_kanan)
+      this.activeSide = 'depan';
+      this.zones = {
+        depan: this.createZoneData('depan'),
+        belakang: this.createZoneData('belakang'),
+        lengan_kiri: this.createZoneData('lengan_kiri'),
+        lengan_kanan: this.createZoneData('lengan_kanan')
+      };
+
+      // Raycaster & Interaksi Langsung di atas 3D
+      this.raycaster = null;
+      this.mouse = null;
+      this.isDragging = false;
+      this.draggedLayer = null;
+      this.dragStartUV = null;
+      this.dragStartLayerPos = null;
+      this.hoveredZone = null;
+
+      // Callbacks ke UI Studio
+      this.onZoneSelect = null;
+      this.onLayerMove = null;
+      this.onFileDrop = null;
 
       // State & Colors
       this.bodyColor = '#1f2937';
+      this.neckColor = '#1f2937';
       this.isAutoRotate = false;
       this.isRendering = false;
       this.renderRequested = false;
       this.initialized = false;
       this.modelLoaded = false;
       this.cachedStudioState = null;
+    }
+
+    createZoneData(name) {
+      const cv = document.createElement('canvas');
+      cv.width = 1024;
+      cv.height = 1024;
+      return {
+        name,
+        canvas: cv,
+        ctx: cv.getContext('2d'),
+        texture: null,
+        decalMesh: null,
+        decalMaterial: null,
+        hasContent: false
+      };
     }
 
     // 1. Inisialisasi Viewport & WebGL Scene
@@ -58,6 +113,9 @@
         console.error('Three.js library is not loaded on window.');
         return;
       }
+
+      this.raycaster = new THREE.Raycaster();
+      this.mouse = new THREE.Vector2();
 
       const width = Math.max(this.container.clientWidth || 0, 420);
       const height = Math.max(this.container.clientHeight || 0, 460);
@@ -81,7 +139,6 @@
         this.renderer.outputColorSpace = THREE.SRGBColorSpace;
       }
 
-      // Bersihkan kontainer jika ada sisa canvas sebelumnya
       const oldCanvas = this.container.querySelector('canvas');
       if (oldCanvas) oldCanvas.remove();
       this.container.appendChild(this.renderer.domElement);
@@ -101,7 +158,7 @@
         this.controls.minDistance = 1.3;
         this.controls.maxDistance = 3.5;
         this.controls.minPolarAngle = Math.PI / 4.2;
-        this.controls.maxPolarAngle = Math.PI / 1.75; // Cegah kaos terbalik
+        this.controls.maxPolarAngle = Math.PI / 1.75;
         this.controls.autoRotate = false;
         this.controls.autoRotateSpeed = 1.8;
         this.controls.addEventListener('change', () => this.requestRender());
@@ -110,15 +167,18 @@
       // Pencahayaan 3-Titik Studio Fotografi
       this.setupLighting();
 
-      // Dynamic Design Canvas Texture
-      this.frontTexture = new THREE.CanvasTexture(this.frontCanvas);
-      if (THREE.sRGBEncoding) {
-        this.frontTexture.encoding = THREE.sRGBEncoding;
-      }
-      this.frontTexture.anisotropy = 8;
+      // Dynamic Design Canvas Textures untuk Setiap Zona
+      Object.values(this.zones).forEach((z) => {
+        z.texture = new THREE.CanvasTexture(z.canvas);
+        if (THREE.sRGBEncoding) z.texture.encoding = THREE.sRGBEncoding;
+        z.texture.anisotropy = 8;
+      });
 
       // Muat Model 3D Kaos Profesional (.GLB)
       this.load3DModel();
+
+      // Pasang Event Interaksi Langsung di atas 3D (Click, Drag, Drop)
+      this.setupDirectInteraction();
 
       // Resize Handler
       window.addEventListener('resize', () => this.onResize());
@@ -160,7 +220,6 @@
       }
 
       const loader = new GLTFLoader();
-      // Gunakan Base64 Data URI jika offline / file:/// protocol, atau path lokal
       const modelSource = window.TSHIRT_GLB_DATA || 'assets/models/tshirt.glb';
 
       loader.load(
@@ -168,28 +227,24 @@
         (gltf) => {
           this.tshirtGroup = gltf.scene;
 
-          // Temukan mesh baju
           this.tshirtGroup.traverse((child) => {
             if (child.isMesh) {
               this.shirtMesh = child;
-              // Material PBR Katun Combed Halus
               child.material.roughness = 0.75;
               child.material.metalness = 0.04;
               child.material.color = new THREE.Color(this.bodyColor);
             }
           });
 
-          // Posisikan dan skalakan kaos di tengah viewport
           this.tshirtGroup.scale.set(2.2, 2.2, 2.2);
           this.tshirtGroup.position.set(0, 0.08, 0);
           this.scene.add(this.tshirtGroup);
 
           this.modelLoaded = true;
 
-          // Inisialisasi decal sablon
-          this.updateDecalMesh();
+          // Inisialisasi decal sablon multi-zona
+          this.updateAllDecals();
 
-          // Sinkronisasi desain jika sudah ada data studio
           if (this.cachedStudioState) {
             this.syncFromStudioState(this.cachedStudioState);
           }
@@ -203,51 +258,243 @@
       );
     }
 
-    // 4. Sinkronisasi Desain 2D -> 3D
+    // 4. Deteksi Zona Permukaan Kaos dari Koordinat Mesh Lokal
+    classifySurfaceZone(localPoint) {
+      if (localPoint.x < -0.17) return 'lengan_kiri';
+      if (localPoint.x > 0.17) return 'lengan_kanan';
+      if (localPoint.z < -0.02) return 'belakang';
+      return 'depan';
+    }
+
+    // 5. Interaksi Langsung pada Model 3D (Raycasting, Dragging & File Drop)
+    setupDirectInteraction() {
+      const canvasEl = this.renderer.domElement;
+      if (!canvasEl) return;
+
+      const updateMouseCoords = (e) => {
+        const rect = canvasEl.getBoundingClientRect();
+        this.mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+        this.mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+      };
+
+      // Pointer Down: Deteksi apakah mengklik elemen sablon untuk di-drag atau mengklik zona
+      canvasEl.addEventListener('pointerdown', (e) => {
+        if (!this.shirtMesh || !this.camera) return;
+        updateMouseCoords(e);
+
+        this.raycaster.setFromCamera(this.mouse, this.camera);
+        const intersects = this.raycaster.intersectObject(this.shirtMesh, false);
+
+        if (intersects.length > 0) {
+          const hit = intersects[0];
+          const localPoint = this.shirtMesh.worldToLocal(hit.point.clone());
+          const detectedZone = this.classifySurfaceZone(localPoint);
+
+          // Cek apakah ada layer elemen di bawah kursor pada zona tersebut
+          const state = this.cachedStudioState;
+          const layers = state && state.sides && state.sides[detectedZone] ? state.sides[detectedZone] : [];
+
+          // Hit test terhadap layer elemen (dalam rentang koordinat 0..1)
+          let clickedLayer = null;
+          if (layers.length > 0) {
+            // Perkiraan koordinat UV lokal dalam zona
+            let normX = 0.5, normY = 0.5;
+            if (detectedZone === 'depan') {
+              normX = (localPoint.x + 0.12) / 0.24;
+              normY = (0.16 - localPoint.y) / 0.24;
+            } else if (detectedZone === 'belakang') {
+              normX = (-localPoint.x + 0.12) / 0.24;
+              normY = (0.16 - localPoint.y) / 0.24;
+            } else if (detectedZone === 'lengan_kiri') {
+              normX = (localPoint.z + 0.06) / 0.12;
+              normY = (0.12 - localPoint.y) / 0.12;
+            } else if (detectedZone === 'lengan_kanan') {
+              normX = (-localPoint.z + 0.06) / 0.12;
+              normY = (0.12 - localPoint.y) / 0.12;
+            }
+
+            normX = Math.max(0, Math.min(1, normX));
+            normY = Math.max(0, Math.min(1, normY));
+
+            // Cari layer teratas yang berdekatan dengan koordinat klik
+            for (let i = layers.length - 1; i >= 0; i--) {
+              const l = layers[i];
+              const dist = Math.hypot(l.x - normX, l.y - normY);
+              const hitRadius = (l.s || 20) / 200;
+              if (dist <= hitRadius * 1.5) {
+                clickedLayer = l;
+                break;
+              }
+            }
+
+            if (clickedLayer) {
+              this.isDragging = true;
+              this.draggedLayer = clickedLayer;
+              this.dragStartUV = { x: normX, y: normY };
+              this.dragStartLayerPos = { x: clickedLayer.x, y: clickedLayer.y };
+              if (this.controls) this.controls.enabled = false;
+              canvasEl.style.cursor = 'grabbing';
+            }
+          }
+
+          // Jika mengklik zona baru tanpa drag layer: aktifkan zona tersebut
+          if (!clickedLayer && detectedZone !== this.activeSide) {
+            this.activeSide = detectedZone;
+            if (this.onZoneSelect) this.onZoneSelect(detectedZone);
+          }
+        }
+      });
+
+      // Pointer Move: Menggeser layer sablon secara real-time di atas lengkungan baju
+      canvasEl.addEventListener('pointermove', (e) => {
+        if (!this.shirtMesh || !this.camera) return;
+        updateMouseCoords(e);
+
+        if (this.isDragging && this.draggedLayer) {
+          this.raycaster.setFromCamera(this.mouse, this.camera);
+          const intersects = this.raycaster.intersectObject(this.shirtMesh, false);
+          if (intersects.length > 0) {
+            const hit = intersects[0];
+            const localPoint = this.shirtMesh.worldToLocal(hit.point.clone());
+            const zone = this.activeSide;
+
+            let curX = 0.5, curY = 0.5;
+            if (zone === 'depan') {
+              curX = (localPoint.x + 0.12) / 0.24;
+              curY = (0.16 - localPoint.y) / 0.24;
+            } else if (zone === 'belakang') {
+              curX = (-localPoint.x + 0.12) / 0.24;
+              curY = (0.16 - localPoint.y) / 0.24;
+            } else if (zone === 'lengan_kiri') {
+              curX = (localPoint.z + 0.06) / 0.12;
+              curY = (0.12 - localPoint.y) / 0.12;
+            } else if (zone === 'lengan_kanan') {
+              curX = (-localPoint.z + 0.06) / 0.12;
+              curY = (0.12 - localPoint.y) / 0.12;
+            }
+
+            const deltaX = curX - this.dragStartUV.x;
+            const deltaY = curY - this.dragStartUV.y;
+
+            this.draggedLayer.x = Math.max(0.05, Math.min(0.95, this.dragStartLayerPos.x + deltaX));
+            this.draggedLayer.y = Math.max(0.05, Math.min(0.95, this.dragStartLayerPos.y + deltaY));
+
+            if (this.cachedStudioState) {
+              this.renderZoneToCanvas(this.cachedStudioState, zone);
+              const zData = this.zones[zone];
+              if (zData && zData.texture) zData.texture.needsUpdate = true;
+              this.requestRender();
+            }
+
+            if (this.onLayerMove) this.onLayerMove(this.draggedLayer);
+          }
+        } else {
+          // Hover Detection: Ubah kursor saat berada di atas baju
+          this.raycaster.setFromCamera(this.mouse, this.camera);
+          const intersects = this.raycaster.intersectObject(this.shirtMesh, false);
+          if (intersects.length > 0) {
+            canvasEl.style.cursor = 'grab';
+          } else {
+            canvasEl.style.cursor = 'default';
+          }
+        }
+      });
+
+      // Pointer Up & Pointer Cancel: Selesaikan drag dan aktifkan kembali OrbitControls
+      const onPointerEnd = () => {
+        if (this.isDragging) {
+          this.isDragging = false;
+          this.draggedLayer = null;
+          if (this.controls) this.controls.enabled = true;
+          canvasEl.style.cursor = 'default';
+          this.requestRender();
+        }
+      };
+
+      canvasEl.addEventListener('pointerup', onPointerEnd);
+      canvasEl.addEventListener('pointercancel', onPointerEnd);
+      canvasEl.addEventListener('pointerleave', onPointerEnd);
+
+      // Drag and Drop File Langsung ke Viewport 3D
+      canvasEl.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        canvasEl.classList.add('v3d-dragover');
+      });
+
+      canvasEl.addEventListener('dragleave', () => {
+        canvasEl.classList.remove('v3d-dragover');
+      });
+
+      canvasEl.addEventListener('drop', (e) => {
+        e.preventDefault();
+        canvasEl.classList.remove('v3d-dragover');
+        if (!e.dataTransfer || !e.dataTransfer.files || !e.dataTransfer.files[0]) return;
+
+        const file = e.dataTransfer.files[0];
+        updateMouseCoords(e);
+        this.raycaster.setFromCamera(this.mouse, this.camera);
+        const intersects = this.raycaster.intersectObject(this.shirtMesh, false);
+
+        let targetZone = this.activeSide;
+        if (intersects.length > 0) {
+          const hit = intersects[0];
+          const localPoint = this.shirtMesh.worldToLocal(hit.point.clone());
+          targetZone = this.classifySurfaceZone(localPoint);
+        }
+
+        if (this.onFileDrop) {
+          this.onFileDrop(file, targetZone);
+        }
+      });
+    }
+
+    // 6. Sinkronisasi Data Desain Studio State ke Semua Zona 3D
     syncFromStudioState(S) {
       this.cachedStudioState = S;
       if (!this.initialized) return;
 
       this.bodyColor = S.color ? S.color.hex : '#1f2937';
-
-      // Update warna bahan kaos
       if (this.shirtMesh && this.shirtMesh.material) {
         this.shirtMesh.material.color.set(this.bodyColor);
       }
 
       if (this.modelLoaded) {
-        this.renderDesignToCanvas(S);
-        if (this.frontTexture) {
-          this.frontTexture.needsUpdate = true;
-        }
-        if (!this.decalMesh) {
-          this.updateDecalMesh();
-        }
+        ['depan', 'belakang', 'lengan_kiri', 'lengan_kanan'].forEach((zone) => {
+          this.renderZoneToCanvas(S, zone);
+          const zData = this.zones[zone];
+          if (zData && zData.texture) {
+            zData.texture.needsUpdate = true;
+          }
+          this.updateZoneDecal(zone, S.area);
+        });
       }
 
       this.requestRender();
     }
 
-    // Render Layer Desain (Teks, Logo, Bentuk) ke Kanvas Transparan
-    renderDesignToCanvas(S) {
+    // Render Layer Desain ke Kanvas Transparan Tertentu
+    renderZoneToCanvas(S, side) {
       if (!S) return;
-      const ctx = this.frontCtx;
-      const w = this.frontCanvas.width;
-      const h = this.frontCanvas.height;
+      const zData = this.zones[side];
+      if (!zData) return;
 
-      // Bersihkan kanvas (Transparan agar menempel natural di atas kaos)
+      const ctx = zData.ctx;
+      const w = zData.canvas.width;
+      const h = zData.canvas.height;
+
       ctx.clearRect(0, 0, w, h);
 
-      const side = 'depan';
-      const printLeft = w * 0.15;
-      const printTop = h * 0.15;
-      const printW = w * 0.7;
-      const printH = h * 0.7;
+      const printLeft = w * 0.12;
+      const printTop = h * 0.12;
+      const printW = w * 0.76;
+      const printH = h * 0.76;
 
       ctx.save();
 
+      const layers = S.sides && S.sides[side] ? S.sides[side] : [];
+      zData.hasContent = layers.length > 0 || (S.up && !!S.up[side]);
+
       if (S.mode === 'editor') {
-        const layers = S.sides && S.sides[side] ? S.sides[side] : [];
         layers.forEach((l) => {
           ctx.save();
           const posX = printLeft + l.x * printW;
@@ -261,7 +508,7 @@
           const baseSize = (l.s || 20) * (printW / 100);
 
           if (l.type === 'text') {
-            ctx.font = `${l.italic ? 'italic ' : ''}${l.bold ? '700 ' : '400 '}${baseSize * 1.6}px '${l.font || 'Poppins'}', sans-serif`;
+            ctx.font = `${l.italic ? 'italic ' : ''}${l.bold ? '700 ' : '400 '}${baseSize * 1.5}px '${l.font || 'Poppins'}', sans-serif`;
             ctx.textAlign = l.align || 'center';
             ctx.textBaseline = 'middle';
 
@@ -280,6 +527,12 @@
               const iw = baseSize * 2.2;
               const ih = iw * aspect;
               ctx.drawImage(img, -iw / 2, -ih / 2, iw, ih);
+            } else {
+              img.onload = () => {
+                this.renderZoneToCanvas(this.cachedStudioState, side);
+                if (zData.texture) zData.texture.needsUpdate = true;
+                this.requestRender();
+              };
             }
           }
           ctx.restore();
@@ -299,6 +552,12 @@
               dw = dh / aspect;
             }
             ctx.drawImage(img, printLeft + (printW - dw) / 2, printTop + (printH - dh) / 2, dw, dh);
+          } else {
+            img.onload = () => {
+              this.renderZoneToCanvas(this.cachedStudioState, side);
+              if (zData.texture) zData.texture.needsUpdate = true;
+              this.requestRender();
+            };
           }
         }
       }
@@ -306,45 +565,42 @@
       ctx.restore();
     }
 
-    // Proyeksikan Desain Sablon ke Dada Kaos Menggunakan DecalGeometry
-    updateDecalMesh() {
+    // 7. Update Decal Mesh untuk Zona Tertentu
+    updateZoneDecal(side, areaKey = 'std') {
       const THREE = window.THREE;
       if (!this.shirtMesh) return;
 
       const DecalGeometry = THREE.DecalGeometry || window.DecalGeometry;
-      if (!DecalGeometry) {
-        // Fallback jika DecalGeometry belum termuat: terapkan sebagai texture map
-        this.shirtMesh.material.map = this.frontTexture;
-        this.shirtMesh.material.needsUpdate = true;
-        this.requestRender();
-        return;
+      if (!DecalGeometry) return;
+
+      const zData = this.zones[side];
+      if (!zData) return;
+
+      // Konfigurasi proyektor decal untuk zona ini
+      const sideConfigs = ZONE_DECAL_CONFIG[side] || ZONE_DECAL_CONFIG.depan;
+      const cfg = sideConfigs[areaKey] || sideConfigs.std;
+
+      // Hapus decal lama untuk zona ini
+      if (zData.decalMesh) {
+        if (this.shirtMesh) this.shirtMesh.remove(zData.decalMesh);
+        if (zData.decalMesh.geometry) zData.decalMesh.geometry.dispose();
+        zData.decalMesh = null;
       }
 
-      // Hapus decal lama jika ada
-      if (this.decalMesh) {
-        if (this.shirtMesh) this.shirtMesh.remove(this.decalMesh);
-        if (this.tshirtGroup) this.tshirtGroup.remove(this.decalMesh);
-        if (this.decalMesh.geometry) this.decalMesh.geometry.dispose();
-        this.decalMesh = null;
-      }
-
-      // Posisi dada pada model shirt_baked.glb (dalam local mesh space): X: 0, Y: 0.04, Z: 0.15
-      const position = new THREE.Vector3(0, 0.04, 0.15);
-      const orientation = new THREE.Euler(0, 0, 0);
-      const size = new THREE.Vector3(0.20, 0.22, 0.20);
+      const position = new THREE.Vector3(...cfg.pos);
+      const orientation = new THREE.Euler(...cfg.rot);
+      const size = new THREE.Vector3(...cfg.size);
 
       // Nolkan matrixWorld sementara agar DecalGeometry terproyeksi dalam mesh local space
       const savedMatrix = this.shirtMesh.matrixWorld.clone();
       this.shirtMesh.matrixWorld.identity();
 
       const decalGeo = new DecalGeometry(this.shirtMesh, position, orientation, size);
-
-      // Pulihkan matrixWorld
       this.shirtMesh.matrixWorld.copy(savedMatrix);
 
-      if (!this.decalMaterial) {
-        this.decalMaterial = new THREE.MeshStandardMaterial({
-          map: this.frontTexture,
+      if (!zData.decalMaterial) {
+        zData.decalMaterial = new THREE.MeshStandardMaterial({
+          map: zData.texture,
           transparent: true,
           depthTest: true,
           depthWrite: false,
@@ -355,13 +611,37 @@
         });
       }
 
-      this.decalMesh = new THREE.Mesh(decalGeo, this.decalMaterial);
-      this.shirtMesh.add(this.decalMesh);
+      zData.decalMesh = new THREE.Mesh(decalGeo, zData.decalMaterial);
+      this.shirtMesh.add(zData.decalMesh);
 
       this.requestRender();
     }
 
-    // 5. Ganti Warna Kaos
+    updateAllDecals() {
+      ['depan', 'belakang', 'lengan_kiri', 'lengan_kanan'].forEach((zone) => {
+        this.updateZoneDecal(zone, this.cachedStudioState ? this.cachedStudioState.area : 'std');
+      });
+    }
+
+    // 8. Kontrol Kamera Cepat (Preset Angles)
+    setCameraAngle(angleKey) {
+      if (!this.camera || !this.controls) return;
+      this.activeSide = angleKey;
+
+      const targets = {
+        depan: [0, 0.0, 2.45],
+        belakang: [0, 0.0, -2.45],
+        lengan_kiri: [-2.45, 0.04, 0],
+        lengan_kanan: [2.45, 0.04, 0]
+      };
+
+      const pos = targets[angleKey] || targets.depan;
+      this.camera.position.set(pos[0], pos[1], pos[2]);
+      this.controls.target.set(0, 0, 0);
+      this.controls.update();
+      this.requestRender();
+    }
+
     setBodyColor(hex) {
       this.bodyColor = hex;
       if (this.shirtMesh && this.shirtMesh.material) {
@@ -372,10 +652,8 @@
 
     setNeckColor(hex) {
       this.neckColor = hex;
-      // Single-piece mesh model menggunakan warna kaos terpadu
     }
 
-    // 6. Kontrol Kamera: Auto-Rotate, Reset & Zoom
     toggleAutoRotate(force) {
       this.isAutoRotate = typeof force === 'boolean' ? force : !this.isAutoRotate;
       if (this.controls) {
@@ -390,12 +668,7 @@
     }
 
     resetCamera() {
-      if (this.camera && this.controls) {
-        this.camera.position.set(0, 0.0, 2.45);
-        this.controls.target.set(0, 0, 0);
-        this.controls.update();
-        this.requestRender();
-      }
+      this.setCameraAngle('depan');
     }
 
     zoom(direction) {
@@ -407,7 +680,31 @@
       }
     }
 
-    // 7. Demand-Rendering Engine (Hemat Daya)
+    // 9. Tangkap Snapshot Foto 3D
+    exportSnapshot() {
+      if (!this.renderer || !this.scene || !this.camera) return null;
+      this.renderer.render(this.scene, this.camera);
+      return this.renderer.domElement.toDataURL('image/png');
+    }
+
+    // Tangkap Mockup Visual untuk Angle Tertentu (Depan, Belakang, Lengan)
+    exportAngleSnapshot(angleKey) {
+      if (!this.renderer || !this.scene || !this.camera) return null;
+      const prevPos = this.camera.position.clone();
+
+      this.setCameraAngle(angleKey);
+      this.renderer.render(this.scene, this.camera);
+      const url = this.renderer.domElement.toDataURL('image/png');
+
+      // Kembalikan posisi kamera semula
+      this.camera.position.copy(prevPos);
+      if (this.controls) this.controls.update();
+      this.requestRender();
+
+      return url;
+    }
+
+    // 10. Demand-Rendering Engine
     requestRender() {
       if (this.isAutoRotate) return;
       if (!this.renderRequested) {
@@ -439,7 +736,6 @@
       this.requestRender();
     }
 
-    // 8. Resize Handler
     onResize() {
       if (!this.container || !this.renderer || !this.camera) return;
       const width = Math.max(this.container.clientWidth || 0, 420);
@@ -450,14 +746,6 @@
       this.requestRender();
     }
 
-    // 9. Tangkap Foto 3D
-    exportSnapshot() {
-      if (!this.renderer || !this.scene || !this.camera) return null;
-      this.renderer.render(this.scene, this.camera);
-      return this.renderer.domElement.toDataURL('image/png');
-    }
-
-    // 10. Bersihkan Memori GPU
     dispose() {
       this.stopContinuousRender();
       if (this.tshirtGroup) {
@@ -471,10 +759,10 @@
           }
         });
       }
-      if (this.decalMesh && this.decalMesh.geometry) {
-        this.decalMesh.geometry.dispose();
-      }
-      if (this.frontTexture) this.frontTexture.dispose();
+      Object.values(this.zones).forEach((z) => {
+        if (z.decalMesh && z.decalMesh.geometry) z.decalMesh.geometry.dispose();
+        if (z.texture) z.texture.dispose();
+      });
       if (this.renderer) {
         this.renderer.dispose();
         if (this.renderer.domElement && this.renderer.domElement.parentNode) {

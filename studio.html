@@ -46,13 +46,27 @@
           <!-- Mode 3D Studio Viewport (Mockey.ai Style - Clean SVG Icons) -->
           <div class="viewport-3d" id="viewport3D" style="display:none">
             <div class="v3d-controls">
+              <!-- Preset Sudut Pandang -->
+              <button type="button" class="v3d-btn on" id="btnAngleFront" title="Sudut Pandang Dada Depan">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3"/></svg>
+                <span>Depan</span>
+              </button>
+              <button type="button" class="v3d-btn" id="btnAngleBack" title="Sudut Pandang Punggung Belakang">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="9"/><path d="M12 7v10"/></svg>
+                <span>Belakang</span>
+              </button>
+              <button type="button" class="v3d-btn" id="btnAngleLeft" title="Sudut Pandang Lengan Kiri">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="15 18 9 12 15 6"/></svg>
+                <span>Lengan Kiri</span>
+              </button>
+              <button type="button" class="v3d-btn" id="btnAngleRight" title="Sudut Pandang Lengan Kanan">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="9 18 15 12 9 6"/></svg>
+                <span>Lengan Kanan</span>
+              </button>
+              <span style="width:1px;height:16px;background:var(--line);margin:0 2px"></span>
               <button type="button" class="v3d-btn" id="btnAutoRotate" title="Putar Otomatis 360°">
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
                 <span>Putar 360°</span>
-              </button>
-              <button type="button" class="v3d-btn" id="btnResetView" title="Reset Sudut Pandang Depan">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/></svg>
-                <span>Depan</span>
               </button>
               <button type="button" class="v3d-btn icon-only" id="btnZoomIn" title="Perbesar">
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -60,12 +74,16 @@
               <button type="button" class="v3d-btn icon-only" id="btnZoomOut" title="Perkecil">
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><line x1="5" y1="12" x2="19" y2="12"/></svg>
               </button>
-              <button type="button" class="v3d-btn primary" id="btnSnapshot3D" title="Unduh Foto 3D">
+              <button type="button" class="v3d-btn" id="btnSnapshot3D" title="Unduh Foto 3D">
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
-                <span>Unduh Foto</span>
+                <span>Foto 3D</span>
+              </button>
+              <button type="button" class="v3d-btn primary" id="btnVendorPack" title="Unduh Paket Vendor (Tech Pack & 300 DPI Artworks ZIP)">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                <span>Paket Vendor (.ZIP)</span>
               </button>
             </div>
-            <div class="v3d-hint">Seret mouse / sentuh untuk putar 360° &bull; Scroll untuk zoom</div>
+            <div class="v3d-hint">Klik &amp; geser logo langsung di baju &bull; Seret file gambar ke model &bull; Putar 360°</div>
           </div>
         </div>
       </div>
@@ -152,6 +170,8 @@
   <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/geometries/DecalGeometry.js"></script>
   <script src="assets/models/tshirt-model.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <script src="js/vendor-export.js"></script>
   <script src="js/three-studio.js"></script>
   <script>
     renderHeader("studio");
@@ -182,20 +202,26 @@
       kaos: [["saku", "Dada kecil", 54, 27, 17, 15], ["std", "Standar", 33, 30, 34, 34], ["besar", "Besar", 30, 25, 40, 46], ["full", "Full", 28, 22, 44, 64]],
       mug: [["kecil", "Kecil", 34, 36, 22, 24], ["std", "Standar", 27, 30, 36, 38], ["besar", "Besar", 25, 26, 40, 46]],
       totebag: [["kecil", "Kecil", 37, 45, 26, 22], ["std", "Standar", 30, 42, 40, 38], ["besar", "Besar", 26, 38, 48, 50]],
-      akrilik: [["kecil", "Kecil", 38, 35, 24, 28], ["std", "Standar", 33, 31, 34, 38], ["besar", "Besar", 30, 28, 40, 46]]
+      akrilik: [["kecil", "Kecil", 38, 35, 24, 28], ["std", "Standar", 33, 31, 34, 38], ["besar", "Besar", 30, 28, 40, 46]],
+      lengan: [["std", "Standar (8x8 cm)", 25, 25, 50, 50], ["besar", "Vertikal (6x20 cm)", 20, 15, 60, 70]]
     };
     AREAS.hoodie = AREAS.kaos;
 
     let products = [], methods = [], uid = 0, drag = null;
     const S = { product: null, color: null, method: null, sizes: {}, qty: 1,
       mode: "editor", side: "depan", area: "std", sel: null,
-      sides: { depan: [], belakang: [] }, up: { depan: null, belakang: null } };
+      sides: { depan: [], belakang: [], lengan_kiri: [], lengan_kanan: [] },
+      up: { depan: null, belakang: null, lengan_kiri: null, lengan_kanan: null } };
 
-    const cat = () => S.product.category;
+    const cat = () => S.product ? S.product.category : "kaos";
     const canBack = () => cat() !== "mug";
-    const areaList = () => AREAS[cat()] || AREAS.kaos;
-    const areaDef = () => areaList().find(a => a[0] === S.area) || areaList().find(a => a[0] === "std");
-    const layers = () => S.sides[S.side];
+    const isApparel = () => cat() === "kaos" || cat() === "hoodie";
+    const areaList = () => {
+      if (isApparel() && (S.side === "lengan_kiri" || S.side === "lengan_kanan")) return AREAS.lengan;
+      return AREAS[cat()] || AREAS.kaos;
+    };
+    const areaDef = () => areaList().find(a => a[0] === S.area) || areaList().find(a => a[0] === "std") || areaList()[0];
+    const layers = () => S.sides[S.side] || (S.sides[S.side] = []);
     const sel = () => layers().find(l => l.id === S.sel);
     const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
     const lum = h => { const n = parseInt(h.slice(1), 16); return (0.299 * (n >> 16) + 0.587 * ((n >> 8) & 255) + 0.114 * (n & 255)) / 255; };
@@ -253,10 +279,25 @@
       }
     }
 
-    const hasSide = s => S.mode === "editor" ? S.sides[s].length > 0 : !!S.up[s];
+    const hasSide = s => S.mode === "editor" ? (S.sides[s] && S.sides[s].length > 0) : !!(S.up && S.up[s]);
+    const sideList = () => {
+      if (isApparel()) {
+        return [
+          ["depan", "Dada Depan"],
+          ["belakang", "Punggung"],
+          ["lengan_kiri", "Lengan Kiri"],
+          ["lengan_kanan", "Lengan Kanan"]
+        ];
+      }
+      return [
+        ["depan", "Depan"],
+        ...(canBack() ? [["belakang", "Belakang"]] : [])
+      ];
+    };
     function drawSideTabs() {
-      $("#sideTabs").innerHTML = ["depan", "belakang"].map(s =>
-        `<button type="button" data-side="${s}" class="${S.side === s ? "on" : ""}" ${s === "belakang" && !canBack() ? "disabled title=\"Produk ini hanya cetak depan\"" : ""}>${s === "depan" ? "Depan" : "Belakang"}${hasSide(s) ? "<i></i>" : ""}</button>`).join("");
+      const list = sideList();
+      $("#sideTabs").innerHTML = list.map(([s, label]) =>
+        `<button type="button" data-side="${s}" class="${S.side === s ? "on" : ""}">${label}${hasSide(s) ? "<i></i>" : ""}</button>`).join("");
     }
     function drawAreas() {
       $("#areas").innerHTML = `<span>Area cetak:</span>` + areaList().map(a =>
@@ -420,7 +461,17 @@
     $("#qtyBox").addEventListener("change", e => { if (e.target.dataset.s) setQty(e.target.dataset.s, e.target.value); });
 
     $("#modes").addEventListener("click", e => { const o = e.target.closest(".opt"); if (!o) return; S.mode = o.dataset.mode; redrawAll(); });
-    $("#sideTabs").addEventListener("click", e => { const b = e.target.closest("button"); if (!b || b.disabled) return; S.side = b.dataset.side; S.sel = null; redrawAll(); });
+    $("#sideTabs").addEventListener("click", e => {
+      const b = e.target.closest("button");
+      if (!b || b.disabled) return;
+      S.side = b.dataset.side;
+      S.sel = null;
+      if (window.Studio3D && activeView === "3d") {
+        window.Studio3D.setCameraAngle(S.side);
+      }
+      updateAngleButtons(S.side);
+      redrawAll();
+    });
     $("#areas").addEventListener("click", e => { const c = e.target.closest("[data-a]"); if (!c) return; S.area = c.dataset.a; drawAreas(); drawPreview(); });
 
     $("#tpls").innerHTML = TEMPLATES.map((t, i) => `<span class="chip sm" data-t="${i}">${t[0]}</span>`).join("") + `<span class="chip sm" data-t="clear">Kosongkan</span>`;
@@ -543,37 +594,44 @@
       const out = { design_url: null, design_back_url: null, design_text: null, design_mode: S.mode };
       const dj = { mode: S.mode, hex: S.color.hex, area: S.area, sides: {}, files: [] };
       const urls = {};
+      const activeSides = isApparel() ? ["depan", "belakang", "lengan_kiri", "lengan_kanan"] : ["depan", ...(canBack() ? ["belakang"] : [])];
+
       if (S.mode === "upload") {
-        for (const s of ["depan", "belakang"]) {
-          const u = S.up[s]; if (!u || (s === "belakang" && !canBack())) continue;
+        for (const s of activeSides) {
+          const u = S.up[s]; if (!u) continue;
           urls[s] = await DB.uploadDesign(u.file);
           dj.files.push({ side: s, name: u.name });
         }
       } else {
         const texts = [];
-        for (const s of ["depan", "belakang"]) {
-          const ls = S.sides[s]; if (!ls.length || (s === "belakang" && !canBack())) continue;
+        for (const s of activeSides) {
+          const ls = S.sides[s]; if (!ls || !ls.length) continue;
           const blob = await renderSide(s, DB.live ? 2400 : 600);
           urls[s] = await DB.uploadDesign(new File([blob], `desain-${s}.png`, { type: "image/png" }));
           const saved = [];
           for (const l of ls) {
             const { id, img, file, src, ...rest } = l;
             if (l.type === "image") rest.url = file ? await DB.uploadDesign(file) : null;
-            if (l.type === "text") texts.push((s === "belakang" ? "[Belakang] " : "") + l.text.replace(/\n/g, " / "));
+            if (l.type === "text") {
+              const prefix = s === "belakang" ? "[Belakang] " : s.startsWith("lengan") ? `[${s === "lengan_kiri" ? "Lengan Kiri" : "Lengan Kanan"}] ` : "";
+              texts.push(prefix + l.text.replace(/\n/g, " / "));
+            }
             saved.push(rest);
           }
           dj.sides[s] = saved;
         }
         out.design_text = texts.join(" | ") || null;
       }
-      out.design_url = urls.depan || null; out.design_back_url = urls.belakang || null;
+      out.design_url = urls.depan || null;
+      out.design_back_url = urls.belakang || null;
       out.design_json = dj;
       return out;
     }
 
     $("#orderBtn").onclick = () => {
-      const empty = S.mode === "editor" ? !hasSide("depan") && !hasSide("belakang") : !S.up.depan && !S.up.belakang;
-      if (empty && !confirm("Belum ada desain. Lanjut memesan tanpa desain?")) return;
+      const activeSides = isApparel() ? ["depan", "belakang", "lengan_kiri", "lengan_kanan"] : ["depan", ...(canBack() ? ["belakang"] : [])];
+      const hasAnyDesign = activeSides.some(s => hasSide(s));
+      if (!hasAnyDesign && !confirm("Belum ada desain. Lanjut memesan tanpa desain?")) return;
       $("#modal").classList.add("show");
     };
     $("#cancelBtn").onclick = () => $("#modal").classList.remove("show");
@@ -669,14 +727,47 @@
     $("#btnView2D").onclick = () => switchView("2d");
     $("#btnView3D").onclick = () => switchView("3d");
 
-    // Kontrol Viewport 3D
+    // Kontrol Viewport 3D & Sudut Pandang
+    function updateAngleButtons(zone) {
+      if ($("#btnAngleFront")) $("#btnAngleFront").classList.toggle("on", zone === "depan");
+      if ($("#btnAngleBack")) $("#btnAngleBack").classList.toggle("on", zone === "belakang");
+      if ($("#btnAngleLeft")) $("#btnAngleLeft").classList.toggle("on", zone === "lengan_kiri");
+      if ($("#btnAngleRight")) $("#btnAngleRight").classList.toggle("on", zone === "lengan_kanan");
+    }
+
+    if ($("#btnAngleFront")) $("#btnAngleFront").onclick = () => {
+      S.side = "depan";
+      if (window.Studio3D) window.Studio3D.setCameraAngle("depan");
+      updateAngleButtons("depan");
+      drawSideTabs();
+      redrawAll();
+    };
+    if ($("#btnAngleBack")) $("#btnAngleBack").onclick = () => {
+      S.side = "belakang";
+      if (window.Studio3D) window.Studio3D.setCameraAngle("belakang");
+      updateAngleButtons("belakang");
+      drawSideTabs();
+      redrawAll();
+    };
+    if ($("#btnAngleLeft")) $("#btnAngleLeft").onclick = () => {
+      S.side = "lengan_kiri";
+      if (window.Studio3D) window.Studio3D.setCameraAngle("lengan_kiri");
+      updateAngleButtons("lengan_kiri");
+      drawSideTabs();
+      redrawAll();
+    };
+    if ($("#btnAngleRight")) $("#btnAngleRight").onclick = () => {
+      S.side = "lengan_kanan";
+      if (window.Studio3D) window.Studio3D.setCameraAngle("lengan_kanan");
+      updateAngleButtons("lengan_kanan");
+      drawSideTabs();
+      redrawAll();
+    };
+
     $("#btnAutoRotate").onclick = () => {
       if (!window.Studio3D) return;
       const on = window.Studio3D.toggleAutoRotate();
       $("#btnAutoRotate").classList.toggle("on", on);
-    };
-    $("#btnResetView").onclick = () => {
-      if (window.Studio3D) window.Studio3D.resetCamera();
     };
     $("#btnZoomIn").onclick = () => {
       if (window.Studio3D) window.Studio3D.zoom(1);
@@ -695,6 +786,66 @@
         toast("Foto 3D berhasil disimpan!");
       } catch (e) {
         toast("Gagal mengambil foto 3D: " + e.message);
+      }
+    };
+
+    // Callback Interaksi Langsung dari 3D ke UI
+    if (window.Studio3D) {
+      window.Studio3D.onZoneSelect = (zone) => {
+        S.side = zone;
+        S.sel = null;
+        updateAngleButtons(zone);
+        drawSideTabs();
+        drawAreas();
+        redrawAll();
+      };
+      window.Studio3D.onLayerMove = (layer) => {
+        drawProps();
+      };
+      window.Studio3D.onFileDrop = async (file, zone) => {
+        S.side = zone;
+        updateAngleButtons(zone);
+        drawSideTabs();
+        drawAreas();
+        await addImage(file);
+        toast("Gambar berhasil ditempatkan di " + (zone === "depan" ? "Dada Depan" : zone === "belakang" ? "Punggung" : zone === "lengan_kiri" ? "Lengan Kiri" : "Lengan Kanan"));
+      };
+    }
+
+    // Helper pembuat gambar untuk Tech Pack
+    const loadImg = src => src ? new Promise(res => { const img = new Image(); img.crossOrigin = "anonymous"; img.onload = () => res(img); img.onerror = () => res(null); img.src = src; }) : Promise.resolve(null);
+
+    // Tombol Unduh Paket Vendor (Tech Pack & 300 DPI Artworks ZIP)
+    if ($("#btnVendorPack")) $("#btnVendorPack").onclick = async () => {
+      if (!window.VendorExport) return toast("Modul VendorExport belum siap.");
+      try {
+        toast("Sedang memproses Paket Vendor (Tech Pack & 300 DPI)...");
+        const orderData = {
+          order_no: "AZK-" + Math.floor(10000 + Math.random() * 90000),
+          customer_name: $("#cName") ? $("#cName").value.trim() || "Desain Studio" : "Desain Studio",
+          customer_phone: $("#cPhone") ? $("#cPhone").value.trim() || "08xxxxxxxxx" : "08xxxxxxxxx",
+          product_name: S.product ? S.product.name : "Kaos Cotton Combed 30s",
+          color: S.color ? S.color.name : "Hitam",
+          colorHex: S.color ? S.color.hex : "#1f2937",
+          method: S.method ? S.method.name : "DTF (Direct to Film)",
+          qty: S.totalQty || 1,
+          size_qty: S.product && S.product.has_sizes ? Object.fromEntries(Object.entries(S.sizes).filter(([, n]) => n > 0)) : { Satuan: S.qty },
+          sides: S.sides,
+          area: S.area,
+          design_note: $("#note") ? $("#note").value.trim() : "",
+          frontMockupImg: await loadImg(window.Studio3D ? window.Studio3D.exportAngleSnapshot("depan") : null),
+          backMockupImg: await loadImg(window.Studio3D ? window.Studio3D.exportAngleSnapshot("belakang") : null),
+          leftSleeveMockupImg: await loadImg(window.Studio3D ? window.Studio3D.exportAngleSnapshot("lengan_kiri") : null),
+          rightSleeveMockupImg: await loadImg(window.Studio3D ? window.Studio3D.exportAngleSnapshot("lengan_kanan") : null),
+          frontDims: window.VendorExport.getZoneDimension("depan", S.area),
+          backDims: window.VendorExport.getZoneDimension("belakang", S.area),
+          leftSleeveDims: window.VendorExport.getZoneDimension("lengan_kiri", S.area),
+          rightSleeveDims: window.VendorExport.getZoneDimension("lengan_kanan", S.area)
+        };
+        await window.VendorExport.exportVendorBundle(orderData, SHAPES);
+        toast("Paket Vendor (.ZIP) berhasil diunduh!");
+      } catch (e) {
+        toast("Gagal mengekspor paket vendor: " + e.message);
       }
     };
 

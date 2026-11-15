@@ -184,10 +184,13 @@ function designBadge(i) {
 function designLinks(i) {
   const dj = i.design_json || {}, up = dj.mode === "upload", out = [];
   const lk = (u, t) => `<a class="dl" href="${esc(u)}" target="_blank" rel="noopener" download>${t}</a>`;
-  if (i.design_url) out.push(lk(i.design_url, up ? "Unduh file desain (depan)" : "Unduh desain siap cetak (depan)"));
-  if (i.design_back_url) out.push(lk(i.design_back_url, up ? "Unduh file desain (belakang)" : "Unduh desain siap cetak (belakang)"));
-  Object.entries(dj.sides || {}).forEach(([s, ls]) => (ls || []).filter(l => l.type === "image" && l.url)
-    .forEach(l => out.push(lk(l.url, `Gambar asli (${s}): ${esc(l.name || "")}`))));
+  if (i.design_url) out.push(lk(i.design_url, up ? "File Desain (Depan)" : "Desain Siap Cetak (Depan)"));
+  if (i.design_back_url) out.push(lk(i.design_back_url, up ? "File Desain (Belakang)" : "Desain Siap Cetak (Belakang)"));
+  Object.entries(dj.sides || {}).forEach(([s, ls]) => {
+    const sideName = s === "depan" ? "Depan" : s === "belakang" ? "Belakang" : s === "lengan_kiri" ? "Lengan Kiri" : s === "lengan_kanan" ? "Lengan Kanan" : s;
+    (ls || []).filter(l => l.type === "image" && l.url)
+      .forEach(l => out.push(lk(l.url, `Gambar asli (${sideName}): ${esc(l.name || "")}`)));
+  });
   let h = i.design_mode ? `<br><small>${up ? "Desain upload sendiri" : "Dibuat di studio"}</small>` : "";
   if (out.length) h += `<br><span style="display:inline-flex;gap:12px;flex-wrap:wrap">${out.join("")}</span>`;
   if (i.design_note) h += `<br><small>Catatan: ${esc(i.design_note)}</small>`;

@@ -437,6 +437,11 @@ textarea.input{font-family:inherit;resize:vertical}
   backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
   padding:5px 8px;border-radius:var(--radius-pill);border:1px solid var(--line);
   box-shadow:0 8px 24px -4px rgba(0,0,0,.12);z-index:10;
+  max-width:96%;flex-wrap:wrap;justify-content:center;
+}
+.viewport-3d.v3d-dragover{
+  outline:2px dashed var(--primary);
+  outline-offset:-8px;
 }
 .v3d-btn{
   border:1px solid var(--line);background:#fff;padding:6px 12px;border-radius:var(--radius-pill);
