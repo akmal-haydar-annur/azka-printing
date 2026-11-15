@@ -60,7 +60,7 @@
                 <span>Foto 3D</span>
               </button>
             </div>
-            <div class="v3d-hint">Putar 360° &bull; Seret elemen di baju &bull; Tarik file gambar ke model</div>
+            <div class="v3d-hint">Pilih lapisan untuk geser &bull; Tombol panah untuk presisi &bull; Putar 360°</div>
           </div>
         </div>
       </div>
@@ -555,6 +555,10 @@
           <button type="button" class="btn sm" data-act="center">Tengahkan</button>
           <button type="button" class="btn sm" data-act="dup">Duplikat</button>
           <button type="button" class="btn sm danger" data-act="del">Hapus</button>
+        </div>
+        <div style="font-size:11px;color:var(--muted);background:#f9fafb;padding:6px 8px;border-radius:6px;border:1px solid var(--line-subtle);margin-top:8px;display:flex;align-items:center;gap:6px">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="flex:none"><path d="M5 9l7-7 7 7M5 15l7 7 7-7"/></svg>
+          <span>Gunakan tombol <b>panah keyboard</b> untuk geser presisi (<b>Shift</b> + Panah untuk geser cepat)</span>
         </div>`;
       box.innerHTML = h;
       if ($("#btnEditBrushLayer")) {
@@ -648,6 +652,9 @@
       drawLayerList();
       drawProps();
       $$(".ly").forEach(n => n.classList.toggle("sel", +n.dataset.id === id));
+      if (window.Studio3D && window.Studio3D.initialized) {
+        window.Studio3D.syncFromStudioState(S);
+      }
     }
     function addLayer(l) {
       const n = layers().length % 5;
@@ -1343,8 +1350,18 @@
       window.Studio3D.onLayerSelect = (layer) => {
         select(layer.id);
       };
+      window.Studio3D.onDeselect = () => {
+        S.sel = null;
+        drawLayerList();
+        drawProps();
+        $$(".ly").forEach(n => n.classList.remove("sel"));
+        if (window.Studio3D && window.Studio3D.initialized) {
+          window.Studio3D.syncFromStudioState(S);
+        }
+      };
       window.Studio3D.onLayerMove = (layer) => {
         drawProps();
+        drawPreview();
       };
       window.Studio3D.onFileDrop = async (file, zone) => {
         S.side = zone;
@@ -1354,6 +1371,47 @@
         toast("Gambar berhasil ditempatkan di " + (zone === "depan" ? "Dada Depan" : zone === "belakang" ? "Punggung" : zone === "lengan_kiri" ? "Lengan Kiri" : "Lengan Kanan"));
       };
     }
+
+    // ==========================================
+    // Kontrol Navigasi Keyboard (Tombol Panah / Nudge)
+    // ==========================================
+    window.addEventListener("keydown", (e) => {
+      if (!["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(e.key)) return;
+
+      const activeEl = document.activeElement;
+      const tag = activeEl ? activeEl.tagName.toLowerCase() : "";
+      if (tag === "input" || tag === "textarea" || tag === "select" || (activeEl && activeEl.isContentEditable)) {
+        return;
+      }
+
+      if ($("#brushModal")?.classList.contains("show") || $("#modal")?.classList.contains("show")) {
+        return;
+      }
+
+      const l = sel();
+      if (!l) return;
+
+      // Cegah scrolling halaman saat menggeser objek dengan tombol panah
+      e.preventDefault();
+
+      // Step pergeseran: halus (1%) atau cepat dengan tombol Shift (4%)
+      const step = e.shiftKey ? 0.04 : 0.01;
+
+      if (e.key === "ArrowLeft") {
+        l.x = Math.max(0.05, Math.min(0.95, l.x - step));
+      } else if (e.key === "ArrowRight") {
+        l.x = Math.max(0.05, Math.min(0.95, l.x + step));
+      } else if (e.key === "ArrowUp") {
+        l.y = Math.max(0.05, Math.min(0.95, l.y - step));
+      } else if (e.key === "ArrowDown") {
+        l.y = Math.max(0.05, Math.min(0.95, l.y + step));
+      }
+
+      drawPreview();
+      if (window.Studio3D && window.Studio3D.initialized) {
+        window.Studio3D.syncFromStudioState(S);
+      }
+    });
 
     // Helper pembuat gambar untuk Tech Pack
     const loadImg = src => src ? new Promise(res => { const img = new Image(); img.crossOrigin = "anonymous"; img.onload = () => res(img); img.onerror = () => res(null); img.src = src; }) : Promise.resolve(null);

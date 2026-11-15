@@ -292,10 +292,12 @@
         this.mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
       };
 
-      // Pointer Down: Deteksi apakah mengklik elemen sablon untuk di-drag atau mengklik zona
+      // Pointer Down: Hanya memulai drag jika pointer menekan objek yang sedang TERPILIH (Selected).
+      // Jika area yang diklik bukan objek terpilih atau belum ada objek dipilih, aktifkan rotasi 3D OrbitControls.
       canvasEl.addEventListener('pointerdown', (e) => {
         if (!this.shirtMesh || !this.camera) return;
         updateMouseCoords(e);
+        this.pointerDownPos = { x: e.clientX, y: e.clientY };
 
         this.raycaster.setFromCamera(this.mouse, this.camera);
         const intersects = this.raycaster.intersectObject(this.shirtMesh, false);
@@ -305,8 +307,8 @@
           const localPoint = this.shirtMesh.worldToLocal(hit.point.clone());
           const detectedZone = this.classifySurfaceZone(localPoint);
 
-          // Cek apakah ada layer elemen di bawah kursor pada zona tersebut
           const state = this.cachedStudioState;
+          const selId = state && state.sel ? state.sel : null;
           const layers = state && state.sides && state.sides[detectedZone] ? state.sides[detectedZone] : [];
 
           // Hit test terhadap layer elemen (dalam rentang koordinat 0..1)
@@ -325,35 +327,50 @@
             normY = (0.12 - localPoint.y) / 0.12;
           }
 
-          normX = Math.max(0.1, Math.min(0.9, normX));
-          normY = Math.max(0.1, Math.min(0.9, normY));
+          normX = Math.max(0.05, Math.min(0.95, normX));
+          normY = Math.max(0.05, Math.min(0.95, normY));
 
-          let clickedLayer = null;
-          if (layers.length > 0) {
-            // Cari layer teratas yang berdekatan dengan koordinat klik
-            for (let i = layers.length - 1; i >= 0; i--) {
-              const l = layers[i];
-              const dist = Math.hypot(l.x - normX, l.y - normY);
-              const hitRadius = (l.s || 20) / 200;
-              if (dist <= hitRadius * 1.5) {
-                clickedLayer = l;
-                break;
-              }
-            }
+          // 1. Cek apakah yang diklik adalah objek yang SEDANG TERPILIH (Selected)
+          const selectedLayer = selId ? layers.find((l) => l.id === selId) : null;
+          let isHitSelected = false;
 
-            if (clickedLayer) {
-              this.isDragging = true;
-              this.draggedLayer = clickedLayer;
-              this.dragStartUV = { x: normX, y: normY };
-              this.dragStartLayerPos = { x: clickedLayer.x, y: clickedLayer.y };
-              if (this.controls) this.controls.enabled = false;
-              canvasEl.style.cursor = 'grabbing';
-              if (this.onLayerSelect) this.onLayerSelect(clickedLayer);
+          if (selectedLayer) {
+            const aspect = selectedLayer.ratio || 1;
+            const halfW = Math.max(0.06, ((selectedLayer.s || 20) / 100) * 0.55);
+            const halfH = Math.max(0.06, halfW * aspect);
+            if (Math.abs(normX - selectedLayer.x) <= halfW * 1.3 && Math.abs(normY - selectedLayer.y) <= halfH * 1.3) {
+              isHitSelected = true;
             }
           }
 
-          // Jika mengklik permukaan tanpa mengenai layer yang sudah ada
-          if (!clickedLayer) {
+          if (isHitSelected && selectedLayer) {
+            // Objek terpilih diklik -> Masuk mode DRAG objek, matikan rotasi kamera 3D
+            this.isDragging = true;
+            this.draggedLayer = selectedLayer;
+            this.dragStartUV = { x: normX, y: normY };
+            this.dragStartLayerPos = { x: selectedLayer.x, y: selectedLayer.y };
+            if (this.controls) this.controls.enabled = false;
+            canvasEl.style.cursor = 'grabbing';
+          } else {
+            // Bukan objek terpilih -> Pastikan rotasi 3D aktif bebas
+            this.isDragging = false;
+            this.draggedLayer = null;
+            if (this.controls) this.controls.enabled = true;
+
+            // Simpan potensi objek lain yang diklik untuk pergantian seleksi jika user hanya melakukan tap (klik tanpa geser)
+            let hitOtherLayer = null;
+            for (let i = layers.length - 1; i >= 0; i--) {
+              const l = layers[i];
+              const aspect = l.ratio || 1;
+              const halfW = Math.max(0.06, ((l.s || 20) / 100) * 0.55);
+              const halfH = Math.max(0.06, halfW * aspect);
+              if (Math.abs(normX - l.x) <= halfW * 1.3 && Math.abs(normY - l.y) <= halfH * 1.3) {
+                hitOtherLayer = l;
+                break;
+              }
+            }
+            this.potentialSelectLayer = hitOtherLayer;
+
             if (detectedZone !== this.activeSide) {
               this.activeSide = detectedZone;
               if (this.onZoneSelect) this.onZoneSelect(detectedZone);
@@ -406,11 +423,44 @@
             if (this.onLayerMove) this.onLayerMove(this.draggedLayer);
           }
         } else {
-          // Hover Detection: Ubah kursor saat berada di atas baju
+          // Hover Detection: Cek apakah kursor berada di atas objek yang sedang TERPILIH
           this.raycaster.setFromCamera(this.mouse, this.camera);
           const intersects = this.raycaster.intersectObject(this.shirtMesh, false);
           if (intersects.length > 0) {
-            canvasEl.style.cursor = 'grab';
+            const hit = intersects[0];
+            const localPoint = this.shirtMesh.worldToLocal(hit.point.clone());
+            const detectedZone = this.classifySurfaceZone(localPoint);
+            const state = this.cachedStudioState;
+            const selId = state && state.sel ? state.sel : null;
+            const layers = state && state.sides && state.sides[detectedZone] ? state.sides[detectedZone] : [];
+            const selectedLayer = selId ? layers.find((l) => l.id === selId) : null;
+
+            let isOverSelected = false;
+            if (selectedLayer) {
+              let normX = 0.5, normY = 0.5;
+              if (detectedZone === 'depan') {
+                normX = (localPoint.x + 0.12) / 0.24;
+                normY = (0.16 - localPoint.y) / 0.24;
+              } else if (detectedZone === 'belakang') {
+                normX = (-localPoint.x + 0.12) / 0.24;
+                normY = (0.16 - localPoint.y) / 0.24;
+              } else if (detectedZone === 'lengan_kiri') {
+                normX = (localPoint.z + 0.06) / 0.12;
+                normY = (0.12 - localPoint.y) / 0.12;
+              } else if (detectedZone === 'lengan_kanan') {
+                normX = (-localPoint.z + 0.06) / 0.12;
+                normY = (0.12 - localPoint.y) / 0.12;
+              }
+
+              const aspect = selectedLayer.ratio || 1;
+              const halfW = Math.max(0.06, ((selectedLayer.s || 20) / 100) * 0.55);
+              const halfH = Math.max(0.06, halfW * aspect);
+              if (Math.abs(normX - selectedLayer.x) <= halfW * 1.3 && Math.abs(normY - selectedLayer.y) <= halfH * 1.3) {
+                isOverSelected = true;
+              }
+            }
+
+            canvasEl.style.cursor = isOverSelected ? 'move' : 'default';
           } else {
             canvasEl.style.cursor = 'default';
           }
@@ -418,14 +468,24 @@
       });
 
       // Pointer Up & Pointer Cancel: Selesaikan drag dan aktifkan kembali OrbitControls
-      const onPointerEnd = () => {
+      const onPointerEnd = (e) => {
         if (this.isDragging) {
           this.isDragging = false;
           this.draggedLayer = null;
           if (this.controls) this.controls.enabled = true;
           canvasEl.style.cursor = 'default';
           this.requestRender();
+        } else if (this.pointerDownPos && e) {
+          // Deteksi apakah aksi pointer adalah klik/tap biasa (bukan drag kamera 3D)
+          const dist = Math.hypot(e.clientX - this.pointerDownPos.x, e.clientY - this.pointerDownPos.y);
+          if (dist < 6) {
+            if (this.potentialSelectLayer) {
+              if (this.onLayerSelect) this.onLayerSelect(this.potentialSelectLayer);
+            }
+          }
         }
+        this.potentialSelectLayer = null;
+        if (this.controls) this.controls.enabled = true;
       };
 
       canvasEl.addEventListener('pointerup', onPointerEnd);
@@ -582,6 +642,59 @@
               ctx.restore();
             }
           }
+
+          // Visual feedback: Garis putus-putus seleksi & titik sudut pada objek yang aktif (selected)
+          if (S.sel && l.id === S.sel) {
+            ctx.save();
+            ctx.globalAlpha = 0.95;
+            ctx.strokeStyle = '#16a34a';
+            ctx.lineWidth = Math.max(2, baseSize * 0.04);
+            ctx.setLineDash([5, 4]);
+
+            let bboxW = baseSize * 2.0;
+            let bboxH = baseSize * 2.0;
+            if (l.type === 'text') {
+              const textMetrics = ctx.measureText(l.text || '');
+              bboxW = Math.max(baseSize * 1.2, textMetrics.width + baseSize * 0.4);
+              bboxH = baseSize * 1.6;
+            } else if (l.type === 'image' || l.type === 'brush') {
+              const aspect = l.ratio || (l.img && l.img.naturalWidth ? l.img.naturalHeight / l.img.naturalWidth : 1);
+              bboxW = baseSize * 2.2;
+              bboxH = bboxW * aspect;
+            } else if (l.type === 'shape') {
+              bboxW = baseSize * 2.0;
+              bboxH = baseSize * 2.0;
+            }
+
+            const pad = 6;
+            const rx = -(bboxW / 2 + pad);
+            const ry = -(bboxH / 2 + pad);
+            const rw = bboxW + pad * 2;
+            const rh = bboxH + pad * 2;
+
+            ctx.strokeRect(rx, ry, rw, rh);
+
+            // Titik pegangan sudut (corner anchors)
+            ctx.setLineDash([]);
+            ctx.fillStyle = '#ffffff';
+            ctx.strokeStyle = '#16a34a';
+            ctx.lineWidth = 1.8;
+            const dotR = 3.5;
+            const corners = [
+              [rx, ry],
+              [rx + rw, ry],
+              [rx, ry + rh],
+              [rx + rw, ry + rh]
+            ];
+            corners.forEach(([cx, cy]) => {
+              ctx.beginPath();
+              ctx.arc(cx, cy, dotR, 0, Math.PI * 2);
+              ctx.fill();
+              ctx.stroke();
+            });
+            ctx.restore();
+          }
+
           ctx.restore();
         });
       } else if (S.mode === 'upload') {
@@ -730,14 +843,38 @@
     // 9. Tangkap Snapshot Foto 3D
     exportSnapshot() {
       if (!this.renderer || !this.scene || !this.camera) return null;
+      const prevSel = this.cachedStudioState ? this.cachedStudioState.sel : null;
+      if (prevSel) {
+        this.cachedStudioState.sel = null;
+        ['depan', 'belakang', 'lengan_kiri', 'lengan_kanan'].forEach((z) => {
+          this.renderZoneToCanvas(this.cachedStudioState, z);
+          if (this.zones[z]?.texture) this.zones[z].texture.needsUpdate = true;
+        });
+      }
       this.renderer.render(this.scene, this.camera);
-      return this.renderer.domElement.toDataURL('image/png');
+      const url = this.renderer.domElement.toDataURL('image/png');
+      if (prevSel) {
+        this.cachedStudioState.sel = prevSel;
+        ['depan', 'belakang', 'lengan_kiri', 'lengan_kanan'].forEach((z) => {
+          this.renderZoneToCanvas(this.cachedStudioState, z);
+          if (this.zones[z]?.texture) this.zones[z].texture.needsUpdate = true;
+        });
+      }
+      return url;
     }
 
     // Tangkap Mockup Visual untuk Angle Tertentu (Depan, Belakang, Lengan)
     exportAngleSnapshot(angleKey) {
       if (!this.renderer || !this.scene || !this.camera) return null;
       const prevPos = this.camera.position.clone();
+      const prevSel = this.cachedStudioState ? this.cachedStudioState.sel : null;
+      if (prevSel) {
+        this.cachedStudioState.sel = null;
+        ['depan', 'belakang', 'lengan_kiri', 'lengan_kanan'].forEach((z) => {
+          this.renderZoneToCanvas(this.cachedStudioState, z);
+          if (this.zones[z]?.texture) this.zones[z].texture.needsUpdate = true;
+        });
+      }
 
       this.setCameraAngle(angleKey);
       this.renderer.render(this.scene, this.camera);
@@ -745,6 +882,13 @@
 
       // Kembalikan posisi kamera semula
       this.camera.position.copy(prevPos);
+      if (prevSel) {
+        this.cachedStudioState.sel = prevSel;
+        ['depan', 'belakang', 'lengan_kiri', 'lengan_kanan'].forEach((z) => {
+          this.renderZoneToCanvas(this.cachedStudioState, z);
+          if (this.zones[z]?.texture) this.zones[z].texture.needsUpdate = true;
+        });
+      }
       if (this.controls) this.controls.update();
       this.requestRender();
 
