@@ -39,6 +39,19 @@
     }
   };
 
+  // Pustaka Bentuk Geometris (SVG Path2D Data)
+  const BUILTIN_SHAPES = {
+    kotak: ["Kotak", "M5 5H95V95H5Z"],
+    bulat: ["Lingkaran", "M50 5a45 45 0 1 0 0 90a45 45 0 1 0 0-90Z"],
+    segitiga: ["Segitiga", "M50 6L95 92H5Z"],
+    ketupat: ["Belah ketupat", "M50 4L96 50L50 96L4 50Z"],
+    bintang: ["Bintang", "M50 5L61.8 36.8 95.6 38.2 69 59.2 78.2 91.8 50 73 21.8 91.8 31 59.2 4.4 38.2 38.2 36.8Z"],
+    hati: ["Hati", "M50 90C20 66 6 48 6 30 6 16 17 6 30 6 40 6 47 12 50 19 53 12 60 6 70 6 83 6 94 16 94 30 94 48 80 66 50 90Z"],
+    petir: ["Petir", "M58 4L18 56H46L40 96L82 40H54Z"],
+    mahkota: ["Mahkota", "M8 78L14 28 34 50 50 18 66 50 86 28 92 78Z"],
+    garis: ["Garis", "M4 44H96V56H4Z"]
+  };
+
   class Studio3DEngine {
     constructor() {
       this.container = null;
@@ -541,6 +554,30 @@
                 if (zData.texture) zData.texture.needsUpdate = true;
                 this.requestRender();
               };
+            }
+          } else if (l.type === 'shape') {
+            const shapesMap = window.SHAPES || BUILTIN_SHAPES;
+            const shapeDef = shapesMap && (shapesMap[l.shape] || shapesMap.kotak);
+            if (shapeDef) {
+              const sw = baseSize * 2.0;
+              ctx.save();
+              ctx.translate(-sw / 2, -sw / 2);
+              ctx.scale(sw / 100, sw / 100);
+              try {
+                const p = new Path2D(shapeDef[1]);
+                if (l.fill) {
+                  ctx.fillStyle = l.color || '#4338ca';
+                  ctx.fill(p);
+                } else {
+                  ctx.strokeStyle = l.color || '#4338ca';
+                  ctx.lineWidth = 7;
+                  ctx.lineJoin = 'round';
+                  ctx.stroke(p);
+                }
+              } catch (err) {
+                console.warn('Shape draw error:', err);
+              }
+              ctx.restore();
             }
           }
           ctx.restore();

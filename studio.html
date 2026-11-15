@@ -114,20 +114,26 @@
 
               <div class="sub-section">
                 <span class="lbl2">Mulai dari Template</span>
-                <div class="chips" id="tpls"></div>
+                <div class="chips-scroll" id="tpls"></div>
               </div>
             </div>
 
-            <!-- Inspector Pengaturan Elemen Aktif -->
+            <!-- Inspector Pengaturan Elemen Aktif & Lapisan -->
             <div class="card field" id="propsCard">
-              <label class="lbl">Pengaturan Elemen</label>
-              <div class="props" id="props" style="border-top:none;margin-top:0;padding-top:0"></div>
-            </div>
+              <div class="inspector-hdr-row" id="propsHdr">
+                <label class="lbl" style="margin:0">Pengaturan Elemen</label>
+                <span class="sub" id="propsSub" style="font-size:12px;font-weight:600;color:var(--primary)"></span>
+              </div>
+              <div class="props" id="props" style="border-top:none;margin-top:6px;padding-top:0"></div>
 
-            <!-- Daftar Lapisan / Layers -->
-            <div class="card field">
-              <label class="lbl">Daftar Elemen Sisi Ini</label>
-              <div class="layers" id="layerList"></div>
+              <!-- Daftar Lapisan / Layers Terintegrasi -->
+              <div class="sub-section" id="layersSubSection" style="margin-top:10px">
+                <div class="layer-hdr-row">
+                  <span class="lbl2" style="margin:0">Lapisan di Sisi Ini</span>
+                  <span class="sub" id="layerCountText" style="font-size:11px"></span>
+                </div>
+                <div class="layers" id="layerList" style="margin-top:4px"></div>
+              </div>
             </div>
           </div>
 
@@ -245,6 +251,7 @@
       mahkota: ["Mahkota", "M8 78L14 28 34 50 50 18 66 50 86 28 92 78Z"],
       garis: ["Garis", "M4 44H96V56H4Z"]
     };
+    window.SHAPES = SHAPES;
     // [kunci, label, left%, top%, lebar%, tinggi%] terhadap kanvas pratinjau
     const AREAS = {
       kaos: [["saku", "Dada kecil", 54, 27, 17, 15], ["std", "Standar", 33, 30, 34, 34], ["besar", "Besar", 30, 25, 40, 46], ["full", "Full", 28, 22, 44, 64]],
@@ -300,9 +307,10 @@
         return `<div class="ly t${on}" data-id="${l.id}" style="${st}${ex}">${esc(l.text)}</div>`;
       }
       if (l.type === "image") return `<div class="ly b${on}" data-id="${l.id}" style="${st}"><img src="${l.src}" alt=""></div>`;
-      const p = SHAPES[l.shape][1];
+      const shapeDef = SHAPES[l.shape] || SHAPES.kotak;
+      const p = shapeDef[1];
       const paint = l.fill ? `fill="${l.color}"` : `fill="none" stroke="${l.color}" stroke-width="7" stroke-linejoin="round"`;
-      return `<div class="ly b${on}" data-id="${l.id}" style="${st}"><svg viewBox="0 0 100 100"><path d="${p}" ${paint}/></svg></div>`;
+      return `<div class="ly b shape-box${on}" data-id="${l.id}" style="${st}"><svg viewBox="0 0 100 100" width="100%" height="100%"><path d="${p}" ${paint}/></svg></div>`;
     }
 
     function drawPreview() {
@@ -387,17 +395,18 @@
     });
 
     function drawLayerList() {
-      const nm = l => l.type === "text" ? l.text.split("\n")[0] || "(kosong)" : l.type === "image" ? l.name : SHAPES[l.shape][0];
+      const nm = l => l.type === "text" ? l.text.split("\n")[0] || "(kosong)" : l.type === "image" ? l.name : (SHAPES[l.shape] ? SHAPES[l.shape][0] : "Bentuk");
       const ic = l => l.type === "text" ? "T" : l.type === "image" ? "▣" : "◆";
       const ls = [...layers()].reverse();
+      if ($("#layerCountText")) $("#layerCountText").textContent = ls.length ? `(${ls.length} elemen)` : "";
       $("#layerList").innerHTML = ls.length ? ls.map(l => `
         <div class="lrow ${l.id === S.sel ? "on" : ""}" data-id="${l.id}">
           <span class="ic">${ic(l)}</span><span class="nm">${esc(nm(l))}</span>
           <button type="button" data-act="up" title="Naikkan posisi lapisan">↑</button>
           <button type="button" data-act="down" title="Turunkan posisi lapisan">↓</button>
-          <button type="button" data-act="del" title="Hapus elemen">✕</button>
+          <button type="button" data-act="del" title="Hapus elemen"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
         </div>`).join("")
-        : `<p class="sub" style="margin:0;font-size:12px">Belum ada elemen di sisi ini. Klik <b>+ Teks</b> atau <b>+ Gambar</b> untuk mulai.</p>`;
+        : `<p class="sub" style="margin:0;font-size:11.5px">Belum ada elemen di sisi ini. Klik <b>+ Teks</b> atau pilih <b>Bentuk</b> untuk mulai.</p>`;
       drawSideTabs();
     }
 
@@ -407,9 +416,12 @@
     function drawProps() {
       const l = sel(), box = $("#props");
       if (!l) {
-        box.innerHTML = `<div class="props-empty"><p class="sub" style="margin:0">Klik elemen pada model kaos atau pilih dari daftar elemen untuk mengatur teks, font, warna, atau ukuran.</p></div>`;
+        if ($("#propsSub")) $("#propsSub").textContent = "";
+        box.innerHTML = `<div class="props-empty"><p class="sub" style="margin:0">Pilih elemen pada model kaos atau pilih dari daftar lapisan untuk mengatur teks, font, warna, atau ukuran.</p></div>`;
         return;
       }
+      const title = l.type === "text" ? "Teks" : l.type === "image" ? "Gambar" : (SHAPES[l.shape] ? SHAPES[l.shape][0] : "Bentuk");
+      if ($("#propsSub")) $("#propsSub").textContent = `(${title})`;
       let h = "";
       if (l.type === "text") {
         h += `<label class="fl">Isi Teks</label><textarea class="input" rows="2" maxlength="80" data-k="text">${esc(l.text)}</textarea>
@@ -632,7 +644,15 @@
       }
       drawPreview();
     });
-    $("#props").addEventListener("change", e => { if (e.target.dataset.k === "text") drawLayerList(); });
+    $("#props").addEventListener("change", e => {
+      const l = sel(), k = e.target.dataset.k;
+      if (e.target.type === "checkbox" && l && k) {
+        l[k] = e.target.checked;
+        drawPreview();
+      }
+      if (k === "text") drawLayerList();
+      if (k === "font" || k === "strokeColor") drawPreview();
+    });
     $("#props").addEventListener("click", e => {
       const l = sel(); if (!l) return;
       const c = e.target.closest("[data-color]");
