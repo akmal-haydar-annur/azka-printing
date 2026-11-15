@@ -657,6 +657,12 @@
       }
     }
     function addLayer(l) {
+      if (!l.id) l.id = ++uid;
+      if (typeof l.x !== "number" || isNaN(l.x)) l.x = 0.5;
+      if (typeof l.y !== "number" || isNaN(l.y)) l.y = 0.5;
+      if (typeof l.s !== "number") l.s = 30;
+      if (typeof l.r !== "number") l.r = 0;
+      if (typeof l.o !== "number") l.o = 1;
       const n = layers().length % 5;
       if (l.x === .5 && l.y === .5 && n) { l.x += (n - 2) * .06; l.y += (n - 2) * .06; }
       layers().push(l);
@@ -665,6 +671,9 @@
       drawLayerList();
       drawProps();
       drawPreview();
+      if (window.Studio3D && window.Studio3D.initialized) {
+        window.Studio3D.syncFromStudioState(S);
+      }
     }
     function removeLayer(id) { const a = layers(), i = a.findIndex(l => l.id === id); if (i < 0) return; a.splice(i, 1); if (S.sel === id) S.sel = null; drawLayerList(); drawProps(); drawPreview(); }
     function moveLayer(id, d) {
@@ -1021,7 +1030,7 @@
           }
           toast("Coretan kuas berhasil diperbarui!");
         } else {
-          addLayer({
+          addLayer(base({
             type: "brush",
             name: "Coretan Kuas",
             dataUrl: dataUrl,
@@ -1032,7 +1041,7 @@
             r: 0,
             o: 1,
             flip: false
-          });
+          }));
           toast("Coretan kuas berhasil dipasang di baju!");
         }
         redrawAll();
@@ -1100,7 +1109,16 @@
       drag.l.y = clamp(drag.oy + (e.clientY - drag.sy) / drag.rect.height, 0, 1);
       drag.el.style.left = drag.l.x * 100 + "%"; drag.el.style.top = drag.l.y * 100 + "%";
     });
-    const endDrag = () => { if (drag) { drag.el.style.cursor = ""; drag = null; } };
+    const endDrag = () => {
+      if (drag) {
+        drag.el.style.cursor = "";
+        drag = null;
+        drawProps();
+        if (window.Studio3D && window.Studio3D.initialized) {
+          window.Studio3D.syncFromStudioState(S);
+        }
+      }
+    };
     $("#area").addEventListener("pointerup", endDrag); $("#area").addEventListener("pointercancel", endDrag);
 
     // Upload desain jadi

@@ -330,46 +330,56 @@
           normX = Math.max(0.05, Math.min(0.95, normX));
           normY = Math.max(0.05, Math.min(0.95, normY));
 
-          // 1. Cek apakah yang diklik adalah objek yang SEDANG TERPILIH (Selected)
-          const selectedLayer = selId ? layers.find((l) => l.id === selId) : null;
-          let isHitSelected = false;
+          // 1. Cek apakah yang diklik adalah objek yang SEDANG TERPILIH (Selected) atau layer lain pada permukaan
+          const selectedLayer = selId ? layers.find((l) => String(l.id) === String(selId)) : null;
+          let clickedLayer = null;
 
+          // Cek hit ke selectedLayer terlebih dahulu
           if (selectedLayer) {
             const aspect = selectedLayer.ratio || 1;
-            const halfW = Math.max(0.06, ((selectedLayer.s || 20) / 100) * 0.55);
-            const halfH = Math.max(0.06, halfW * aspect);
-            if (Math.abs(normX - selectedLayer.x) <= halfW * 1.3 && Math.abs(normY - selectedLayer.y) <= halfH * 1.3) {
-              isHitSelected = true;
+            const sizeBase = ((selectedLayer.s || 30) / 100) * 0.7;
+            const halfW = Math.max(0.08, sizeBase);
+            const halfH = Math.max(0.08, sizeBase * aspect);
+            const lx = typeof selectedLayer.x === 'number' && !isNaN(selectedLayer.x) ? selectedLayer.x : 0.5;
+            const ly = typeof selectedLayer.y === 'number' && !isNaN(selectedLayer.y) ? selectedLayer.y : 0.5;
+            if (Math.abs(normX - lx) <= halfW * 1.5 && Math.abs(normY - ly) <= halfH * 1.5) {
+              clickedLayer = selectedLayer;
             }
           }
 
-          if (isHitSelected && selectedLayer) {
-            // Objek terpilih diklik -> Masuk mode DRAG objek, matikan rotasi kamera 3D
-            this.isDragging = true;
-            this.draggedLayer = selectedLayer;
-            this.dragStartUV = { x: normX, y: normY };
-            this.dragStartLayerPos = { x: selectedLayer.x, y: selectedLayer.y };
-            if (this.controls) this.controls.enabled = false;
-            canvasEl.style.cursor = 'grabbing';
-          } else {
-            // Bukan objek terpilih -> Pastikan rotasi 3D aktif bebas
-            this.isDragging = false;
-            this.draggedLayer = null;
-            if (this.controls) this.controls.enabled = true;
-
-            // Simpan potensi objek lain yang diklik untuk pergantian seleksi jika user hanya melakukan tap (klik tanpa geser)
-            let hitOtherLayer = null;
+          // Jika tidak mengenai selectedLayer, cek apakah mengenai layer lain di zona ini
+          if (!clickedLayer && layers.length > 0) {
             for (let i = layers.length - 1; i >= 0; i--) {
               const l = layers[i];
               const aspect = l.ratio || 1;
-              const halfW = Math.max(0.06, ((l.s || 20) / 100) * 0.55);
-              const halfH = Math.max(0.06, halfW * aspect);
-              if (Math.abs(normX - l.x) <= halfW * 1.3 && Math.abs(normY - l.y) <= halfH * 1.3) {
-                hitOtherLayer = l;
+              const sizeBase = ((l.s || 30) / 100) * 0.7;
+              const halfW = Math.max(0.08, sizeBase);
+              const halfH = Math.max(0.08, sizeBase * aspect);
+              const lx = typeof l.x === 'number' && !isNaN(l.x) ? l.x : 0.5;
+              const ly = typeof l.y === 'number' && !isNaN(l.y) ? l.y : 0.5;
+              if (Math.abs(normX - lx) <= halfW * 1.5 && Math.abs(normY - ly) <= halfH * 1.5) {
+                clickedLayer = l;
                 break;
               }
             }
-            this.potentialSelectLayer = hitOtherLayer;
+          }
+
+          if (clickedLayer) {
+            // Objek terkena klik -> Masuk mode DRAG objek, nonaktifkan rotasi 3D OrbitControls
+            this.isDragging = true;
+            this.draggedLayer = clickedLayer;
+            const lx = typeof clickedLayer.x === 'number' && !isNaN(clickedLayer.x) ? clickedLayer.x : 0.5;
+            const ly = typeof clickedLayer.y === 'number' && !isNaN(clickedLayer.y) ? clickedLayer.y : 0.5;
+            this.dragStartUV = { x: normX, y: normY };
+            this.dragStartLayerPos = { x: lx, y: ly };
+            if (this.controls) this.controls.enabled = false;
+            canvasEl.style.cursor = 'grabbing';
+            if (this.onLayerSelect) this.onLayerSelect(clickedLayer);
+          } else {
+            // Area yang diklik adalah kaos kosong di luar layer apapun -> Rotasi 3D bebas
+            this.isDragging = false;
+            this.draggedLayer = null;
+            if (this.controls) this.controls.enabled = true;
 
             if (detectedZone !== this.activeSide) {
               this.activeSide = detectedZone;
@@ -410,8 +420,11 @@
             const deltaX = curX - this.dragStartUV.x;
             const deltaY = curY - this.dragStartUV.y;
 
-            this.draggedLayer.x = Math.max(0.05, Math.min(0.95, this.dragStartLayerPos.x + deltaX));
-            this.draggedLayer.y = Math.max(0.05, Math.min(0.95, this.dragStartLayerPos.y + deltaY));
+            const startX = typeof this.dragStartLayerPos.x === 'number' && !isNaN(this.dragStartLayerPos.x) ? this.dragStartLayerPos.x : 0.5;
+            const startY = typeof this.dragStartLayerPos.y === 'number' && !isNaN(this.dragStartLayerPos.y) ? this.dragStartLayerPos.y : 0.5;
+
+            this.draggedLayer.x = Math.max(0.05, Math.min(0.95, startX + deltaX));
+            this.draggedLayer.y = Math.max(0.05, Math.min(0.95, startY + deltaY));
 
             if (this.cachedStudioState) {
               this.renderZoneToCanvas(this.cachedStudioState, zone);
@@ -423,7 +436,7 @@
             if (this.onLayerMove) this.onLayerMove(this.draggedLayer);
           }
         } else {
-          // Hover Detection: Cek apakah kursor berada di atas objek yang sedang TERPILIH
+          // Hover Detection: Cek apakah kursor berada di atas objek apapun pada baju
           this.raycaster.setFromCamera(this.mouse, this.camera);
           const intersects = this.raycaster.intersectObject(this.shirtMesh, false);
           if (intersects.length > 0) {
@@ -431,12 +444,10 @@
             const localPoint = this.shirtMesh.worldToLocal(hit.point.clone());
             const detectedZone = this.classifySurfaceZone(localPoint);
             const state = this.cachedStudioState;
-            const selId = state && state.sel ? state.sel : null;
             const layers = state && state.sides && state.sides[detectedZone] ? state.sides[detectedZone] : [];
-            const selectedLayer = selId ? layers.find((l) => l.id === selId) : null;
 
-            let isOverSelected = false;
-            if (selectedLayer) {
+            let isOverLayer = false;
+            if (layers.length > 0) {
               let normX = 0.5, normY = 0.5;
               if (detectedZone === 'depan') {
                 normX = (localPoint.x + 0.12) / 0.24;
@@ -452,15 +463,22 @@
                 normY = (0.12 - localPoint.y) / 0.12;
               }
 
-              const aspect = selectedLayer.ratio || 1;
-              const halfW = Math.max(0.06, ((selectedLayer.s || 20) / 100) * 0.55);
-              const halfH = Math.max(0.06, halfW * aspect);
-              if (Math.abs(normX - selectedLayer.x) <= halfW * 1.3 && Math.abs(normY - selectedLayer.y) <= halfH * 1.3) {
-                isOverSelected = true;
+              for (let i = layers.length - 1; i >= 0; i--) {
+                const l = layers[i];
+                const aspect = l.ratio || 1;
+                const sizeBase = ((l.s || 30) / 100) * 0.7;
+                const halfW = Math.max(0.08, sizeBase);
+                const halfH = Math.max(0.08, sizeBase * aspect);
+                const lx = typeof l.x === 'number' && !isNaN(l.x) ? l.x : 0.5;
+                const ly = typeof l.y === 'number' && !isNaN(l.y) ? l.y : 0.5;
+                if (Math.abs(normX - lx) <= halfW * 1.5 && Math.abs(normY - ly) <= halfH * 1.5) {
+                  isOverLayer = true;
+                  break;
+                }
               }
             }
 
-            canvasEl.style.cursor = isOverSelected ? 'move' : 'default';
+            canvasEl.style.cursor = isOverLayer ? 'move' : 'default';
           } else {
             canvasEl.style.cursor = 'default';
           }
