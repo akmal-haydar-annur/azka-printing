@@ -45,18 +45,6 @@
 
           <!-- Mode 3D Studio Viewport (Apple / Mockey Style) -->
           <div class="viewport-3d" id="viewport3D" style="display:none">
-            <!-- Floating Quick Action Dock (Top) -->
-            <div class="v3d-action-dock">
-              <button type="button" class="v3d-dock-btn primary" id="btn3DAddText" title="Tambah teks langsung ke model 3D">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M4 7V4h16v3M9 20h6M12 4v16"/></svg>
-                <span>+ Tambah Teks</span>
-              </button>
-              <button type="button" class="v3d-dock-btn" id="btn3DAddImg" title="Upload gambar/logo ke model 3D">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-                <span>+ Upload Gambar</span>
-              </button>
-            </div>
-
             <!-- Sleek Bottom Viewport Dock (Single Row Non-Wrapping) -->
             <div class="v3d-controls">
               <button type="button" class="v3d-btn" id="btnAutoRotate" title="Putar Otomatis 360°">
@@ -77,67 +65,134 @@
         </div>
       </div>
 
-      <!-- Pengaturan -->
+      <!-- Pengaturan Studio -->
       <div class="panel">
-        <div class="card field"><label class="lbl">Produk</label>
-          <select id="product" class="input"></select></div>
-
-        <div class="card field"><label class="lbl">Warna Kaos: <span id="colorName" style="font-weight:500"></span></label>
-          <div class="swatches" id="swatches"></div></div>
-
-        <div class="card field"><label class="lbl">Cara Membuat Desain</label>
-          <div class="modes" id="modes">
-            <div class="opt on" data-mode="editor"><div><b>Desain Sendiri</b><small>Teks, gambar, bentuk &amp; template</small></div></div>
-            <div class="opt" data-mode="upload"><div><b>Sudah Punya Desain</b><small>Upload file desain jadi</small></div></div>
-          </div></div>
-
-        <!-- MODE 1: editor -->
-        <div class="card field" id="editorCard">
-          <label class="lbl">Desain Sendiri</label>
-
-          <span class="lbl2" style="margin-top:0">Mulai dari template (opsional)</span>
-          <div class="chips" id="tpls"></div>
-
-          <span class="lbl2">Tambah elemen</span>
-          <div class="tools">
-            <button type="button" class="btn sm" id="addText">+ Teks</button>
-            <button type="button" class="btn sm" id="addImg">+ Gambar / Logo</button>
-            <input type="file" id="imgFile" accept="image/png,image/jpeg,image/svg+xml,image/webp" hidden>
+        <div class="panel-tabs-wrap">
+          <div class="seg panel-tabs" id="panelTabs">
+            <button type="button" class="on" data-tab="desain">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+              <span>Desain</span>
+            </button>
+            <button type="button" data-tab="produk">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M20.38 3.46L16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z"/></svg>
+              <span>Bahan &amp; Warna</span>
+            </button>
+            <button type="button" data-tab="pesan">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+              <span>Ukuran &amp; Pesan</span>
+            </button>
           </div>
-          <div class="shapes" id="shapes"></div>
-
-          <span class="lbl2">Elemen di sisi ini</span>
-          <div class="layers" id="layerList"></div>
-
-          <div class="props" id="props"></div>
         </div>
 
-        <!-- MODE 2: upload -->
-        <div class="card field" id="uploadCard" hidden>
-          <label class="lbl">Sudah punya desain? Upload di sini</label>
-          <div id="uploadBox"></div>
-          <p class="sub" style="margin-top:10px">Atur ukuran area cetak lewat pilihan di bawah pratinjau. Untuk hasil terbaik, pakai PNG transparan atau file vektor (SVG/PDF/AI/CDR).</p>
+        <!-- TAB 1: DESAIN -->
+        <div class="panel-tab-content" id="tabDesain">
+          <div class="seg-modes" id="modes">
+            <button type="button" class="on" data-mode="editor">Desain Sendiri</button>
+            <button type="button" data-mode="upload">Upload File Jadi</button>
+          </div>
+
+          <!-- MODE 1: editor -->
+          <div id="editorCard">
+            <!-- Tools Tambah Elemen -->
+            <div class="card field">
+              <div class="design-tools-row">
+                <button type="button" class="btn primary sm" id="addText" title="Tambah teks baru">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M4 7V4h16v3M9 20h6M12 4v16"/></svg>
+                  <span>+ Teks</span>
+                </button>
+                <button type="button" class="btn outline sm" id="addImg" title="Upload gambar atau logo">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                  <span>+ Gambar / Logo</span>
+                </button>
+                <input type="file" id="imgFile" accept="image/png,image/jpeg,image/svg+xml,image/webp" hidden>
+              </div>
+
+              <div class="sub-section">
+                <span class="lbl2">Bentuk Geometris</span>
+                <div class="shapes" id="shapes"></div>
+              </div>
+
+              <div class="sub-section">
+                <span class="lbl2">Mulai dari Template</span>
+                <div class="chips" id="tpls"></div>
+              </div>
+            </div>
+
+            <!-- Inspector Pengaturan Elemen Aktif -->
+            <div class="card field" id="propsCard">
+              <label class="lbl">Pengaturan Elemen</label>
+              <div class="props" id="props" style="border-top:none;margin-top:0;padding-top:0"></div>
+            </div>
+
+            <!-- Daftar Lapisan / Layers -->
+            <div class="card field">
+              <label class="lbl">Daftar Elemen Sisi Ini</label>
+              <div class="layers" id="layerList"></div>
+            </div>
+          </div>
+
+          <!-- MODE 2: upload -->
+          <div class="card field" id="uploadCard" hidden>
+            <label class="lbl">Sudah punya desain? Upload di sini</label>
+            <div id="uploadBox"></div>
+            <p class="sub" style="margin-top:10px">Atur ukuran area cetak lewat pilihan di bawah pratinjau. Untuk hasil terbaik, gunakan PNG transparan atau file vektor (SVG/PDF/AI/CDR).</p>
+          </div>
         </div>
 
-        <div class="card field"><label class="lbl">Catatan untuk tim (opsional)</label>
-          <textarea id="note" class="input" rows="2" maxlength="300" placeholder="Contoh: logo di dada kiri, ukuran sekitar 8 cm"></textarea></div>
+        <!-- TAB 2: BAHAN & WARNA -->
+        <div class="panel-tab-content" id="tabProduk" hidden>
+          <div class="card field">
+            <label class="lbl">Produk</label>
+            <select id="product" class="input"></select>
+          </div>
 
-        <div class="card field"><label class="lbl">Teknik Cetak</label><div id="methods"></div></div>
+          <div class="card field">
+            <label class="lbl">Warna Bahan: <span id="colorName" style="font-weight:600;color:var(--primary)"></span></label>
+            <div class="swatches" id="swatches"></div>
+          </div>
 
-        <div class="card field"><label class="lbl" id="qtyLabel">Ukuran & Jumlah</label><div id="qtyBox"></div></div>
+          <div class="card field">
+            <label class="lbl">Teknik Cetak</label>
+            <div id="methods"></div>
+          </div>
 
-        <div class="card summary">
-          <div class="row"><span>Harga satuan</span><span id="sUnit"></span></div>
-          <div class="row"><span>Jumlah</span><span id="sQty"></span></div>
-          <div class="row"><span>Subtotal</span><span id="sSub"></span></div>
-          <div class="row disc"><span id="sDiscLbl">Diskon grosir</span><span id="sDisc"></span></div>
-          <div class="row total"><span>Total</span><span id="sTotal"></span></div>
-          <button class="btn accent block" id="orderBtn" style="margin-top:14px">Pesan Sekarang</button>
-          <button type="button" class="btn outline block" id="btnVendorPack" style="margin-top:8px" title="Unduh lembar kerja produksi (Tech Pack) dan berkas sablon 300 DPI">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-            <span>Unduh Paket Vendor (.ZIP)</span>
+          <div class="card field">
+            <label class="lbl">Catatan untuk Tim Produksi (opsional)</label>
+            <textarea id="note" class="input" rows="2" maxlength="300" placeholder="Contoh: logo di dada kiri, ukuran sekitar 8 cm"></textarea>
+          </div>
+        </div>
+
+        <!-- TAB 3: UKURAN & PESAN -->
+        <div class="panel-tab-content" id="tabPesan" hidden>
+          <div class="card field">
+            <label class="lbl" id="qtyLabel">Ukuran &amp; Jumlah</label>
+            <div id="qtyBox"></div>
+          </div>
+
+          <div class="card summary">
+            <div class="row"><span>Harga satuan</span><span id="sUnit"></span></div>
+            <div class="row"><span>Jumlah</span><span id="sQty"></span></div>
+            <div class="row"><span>Subtotal</span><span id="sSub"></span></div>
+            <div class="row disc"><span id="sDiscLbl">Diskon grosir</span><span id="sDisc"></span></div>
+            <div class="row total"><span>Total</span><span id="sTotal"></span></div>
+            <button class="btn accent block" id="orderBtn" style="margin-top:14px">Pesan Sekarang</button>
+            <button type="button" class="btn outline block" id="btnVendorPack" style="margin-top:8px" title="Unduh lembar kerja produksi (Tech Pack) dan berkas sablon 300 DPI">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              <span>Unduh Paket Vendor (.ZIP)</span>
+            </button>
+            <p class="sub" style="text-align:center">Diskon: 5% (12 pcs), 10% (24 pcs), 15% (50 pcs)</p>
+          </div>
+        </div>
+
+        <!-- Sticky Quick Mini-Bar at bottom of panel -->
+        <div class="panel-mini-bar" id="panelMiniBar">
+          <div class="mini-bar-info">
+            <span class="mini-bar-sub" id="miniSummaryText">1 pcs &bull; Kaos Cotton</span>
+            <b class="mini-bar-total" id="miniTotal">Rp 85.000</b>
+          </div>
+          <button type="button" class="btn primary sm" id="btnQuickNext">
+            <span id="btnQuickNextText">Bahan &amp; Warna &rarr;</span>
           </button>
-          <p class="sub" style="text-align:center">Diskon: 5% (12 pcs), 10% (24 pcs), 15% (50 pcs)</p>
         </div>
       </div>
     </div>
@@ -297,10 +352,39 @@
         `<span class="chip sm ${a[0] === areaDef()[0] ? "on" : ""}" data-a="${a[0]}">${a[1]}</span>`).join("");
     }
     function drawModes() {
-      $$("#modes .opt").forEach(o => o.classList.toggle("on", o.dataset.mode === S.mode));
+      $$("#modes [data-mode]").forEach(o => o.classList.toggle("on", o.dataset.mode === S.mode));
       $("#editorCard").hidden = S.mode !== "editor";
       $("#uploadCard").hidden = S.mode !== "upload";
     }
+
+    let activePanelTab = "desain";
+    function switchPanelTab(tab) {
+      activePanelTab = tab;
+      $$("#panelTabs button").forEach(b => b.classList.toggle("on", b.dataset.tab === tab));
+      $("#tabDesain").hidden = tab !== "desain";
+      $("#tabProduk").hidden = tab !== "produk";
+      $("#tabPesan").hidden = tab !== "pesan";
+
+      const miniBar = $("#panelMiniBar"), btn = $("#btnQuickNext"), txt = $("#btnQuickNextText");
+      if (miniBar && btn && txt) {
+        if (tab === "pesan") {
+          miniBar.style.display = "none";
+        } else {
+          miniBar.style.display = "flex";
+          if (tab === "desain") {
+            txt.innerHTML = "Bahan &amp; Warna &rarr;";
+            btn.onclick = () => switchPanelTab("produk");
+          } else if (tab === "produk") {
+            txt.innerHTML = "Ukuran &amp; Pesan &rarr;";
+            btn.onclick = () => switchPanelTab("pesan");
+          }
+        }
+      }
+    }
+    $("#panelTabs").addEventListener("click", e => {
+      const b = e.target.closest("[data-tab]");
+      if (b) switchPanelTab(b.dataset.tab);
+    });
 
     function drawLayerList() {
       const nm = l => l.type === "text" ? l.text.split("\n")[0] || "(kosong)" : l.type === "image" ? l.name : SHAPES[l.shape][0];
@@ -309,9 +393,11 @@
       $("#layerList").innerHTML = ls.length ? ls.map(l => `
         <div class="lrow ${l.id === S.sel ? "on" : ""}" data-id="${l.id}">
           <span class="ic">${ic(l)}</span><span class="nm">${esc(nm(l))}</span>
-          <button type="button" data-act="up" title="Naikkan">↑</button><button type="button" data-act="down" title="Turunkan">↓</button>
-          <button type="button" data-act="del" title="Hapus">✕</button></div>`).join("")
-        : `<p class="sub">Belum ada elemen. Tambahkan teks, gambar, atau bentuk, atau pilih template.</p>`;
+          <button type="button" data-act="up" title="Naikkan posisi lapisan">↑</button>
+          <button type="button" data-act="down" title="Turunkan posisi lapisan">↓</button>
+          <button type="button" data-act="del" title="Hapus elemen">✕</button>
+        </div>`).join("")
+        : `<p class="sub" style="margin:0;font-size:12px">Belum ada elemen di sisi ini. Klik <b>+ Teks</b> atau <b>+ Gambar</b> untuk mulai.</p>`;
       drawSideTabs();
     }
 
@@ -320,33 +406,52 @@
 
     function drawProps() {
       const l = sel(), box = $("#props");
-      if (!l) { box.innerHTML = `<p class="sub">Klik elemen di pratinjau atau di daftar untuk mengubahnya.</p>`; return; }
+      if (!l) {
+        box.innerHTML = `<div class="props-empty"><p class="sub" style="margin:0">Klik elemen pada model kaos atau pilih dari daftar elemen untuk mengatur teks, font, warna, atau ukuran.</p></div>`;
+        return;
+      }
       let h = "";
       if (l.type === "text") {
-        h += `<label class="fl">Teks</label><textarea class="input" rows="2" maxlength="80" data-k="text">${esc(l.text)}</textarea>
-          <div class="two"><div><label class="fl">Font</label><select class="input" data-k="font">${FONTS.map(([f, n]) =>
-            `<option value="${f}" ${f === l.font ? "selected" : ""}>${f} - ${n}</option>`).join("")}</select></div>
-          <div><label class="fl">Gaya</label><div class="tbtn">
-            <button type="button" data-act="bold" class="${l.bold ? "on" : ""}"><b>B</b></button>
-            <button type="button" data-act="italic" class="${l.italic ? "on" : ""}"><i>I</i></button></div></div></div>
-          <label class="fl" style="margin-top:10px">Rata teks</label><div class="tbtn">
+        h += `<label class="fl">Isi Teks</label><textarea class="input" rows="2" maxlength="80" data-k="text">${esc(l.text)}</textarea>
+          <div class="two" style="margin-top:8px">
+            <div><label class="fl">Font</label><select class="input" data-k="font">${FONTS.map(([f, n]) =>
+              `<option value="${f}" ${f === l.font ? "selected" : ""}>${f} - ${n}</option>`).join("")}</select></div>
+            <div><label class="fl">Gaya Huruf</label><div class="tbtn">
+              <button type="button" data-act="bold" class="${l.bold ? "on" : ""}"><b>B</b></button>
+              <button type="button" data-act="italic" class="${l.italic ? "on" : ""}"><i>I</i></button></div></div>
+          </div>
+          <label class="fl" style="margin-top:10px">Perataan Teks</label><div class="tbtn">
             ${[["left", "Kiri"], ["center", "Tengah"], ["right", "Kanan"]].map(([v, t]) => `<button type="button" data-act="al-${v}" class="${l.align === v ? "on" : ""}">${t}</button>`).join("")}</div>
-          <label class="fl" style="margin-top:10px">Warna teks</label>${colorRow("color", l.color)}
-          <label class="chk"><input type="checkbox" data-k="stroke" ${l.stroke ? "checked" : ""}> Garis tepi huruf</label>
+          <label class="fl" style="margin-top:10px">Warna Huruf</label>${colorRow("color", l.color)}
+          <label class="chk"><input type="checkbox" data-k="stroke" ${l.stroke ? "checked" : ""}> Garis tepi huruf (Outline)</label>
           <div class="cpick" style="margin-top:6px"><small class="sub" style="margin:0">Warna garis tepi</small><input type="color" data-k="strokeColor" value="${l.strokeColor}"></div>`;
       } else if (l.type === "shape") {
-        h += `<label class="fl">Warna bentuk</label>${colorRow("color", l.color)}
-          <label class="chk"><input type="checkbox" data-k="fill" ${l.fill ? "checked" : ""}> Isi penuh (matikan untuk garis tepi saja)</label>`;
+        h += `<label class="fl">Warna Bentuk</label>${colorRow("color", l.color)}
+          <label class="chk"><input type="checkbox" data-k="fill" ${l.fill ? "checked" : ""}> Isi penuh (matikan untuk garis luar saja)</label>`;
       } else {
-        h += `<p class="sub" style="margin:0 0 4px">${esc(l.name)}</p><div class="tbtn"><button type="button" data-act="flip" class="${l.flip ? "on" : ""}">Balik horizontal</button></div>`;
+        h += `<p class="sub" style="margin:0 0 6px">${esc(l.name)}</p><div class="tbtn"><button type="button" data-act="flip" class="${l.flip ? "on" : ""}">Balik horizontal</button></div>`;
       }
       const [mn, mx] = l.type === "text" ? [4, 70] : [4, 120];
-      h += `<div class="two"><div><label class="fl">Ukuran</label><input class="rng" type="range" min="${mn}" max="${mx}" step="1" value="${l.s}" data-k="s"></div>
-        <div><label class="fl">Putar</label><input class="rng" type="range" min="-180" max="180" step="1" value="${l.r}" data-k="r"></div>
-        <div><label class="fl">Transparansi</label><input class="rng" type="range" min="0.15" max="1" step="0.05" value="${l.o}" data-k="o"></div></div>
-        <div class="pact"><button type="button" class="btn sm" data-act="center">Tengahkan</button>
+      h += `
+        <div class="slider-row" style="margin-top:10px">
+          <div class="slider-hdr"><span class="fl">Ukuran</span><span class="val-badge" id="lblValS">${l.s}</span></div>
+          <input class="rng" type="range" min="${mn}" max="${mx}" step="1" value="${l.s}" data-k="s">
+        </div>
+        <div class="two" style="margin-top:8px">
+          <div class="slider-row">
+            <div class="slider-hdr"><span class="fl">Putar</span><span class="val-badge" id="lblValR">${l.r}°</span></div>
+            <input class="rng" type="range" min="-180" max="180" step="1" value="${l.r}" data-k="r">
+          </div>
+          <div class="slider-row">
+            <div class="slider-hdr"><span class="fl">Transparansi</span><span class="val-badge" id="lblValO">${Math.round(l.o * 100)}%</span></div>
+            <input class="rng" type="range" min="0.15" max="1" step="0.05" value="${l.o}" data-k="o">
+          </div>
+        </div>
+        <div class="pact" style="margin-top:12px">
+          <button type="button" class="btn sm" data-act="center">Tengahkan</button>
           <button type="button" class="btn sm" data-act="dup">Duplikat</button>
-          <button type="button" class="btn sm danger" data-act="del">Hapus</button></div>`;
+          <button type="button" class="btn sm danger" data-act="del">Hapus</button>
+        </div>`;
       box.innerHTML = h;
     }
 
@@ -411,6 +516,13 @@
       $("#sDisc").textContent = "-" + rupiah(disc);
       $("#sTotal").textContent = rupiah(total);
       $("#orderBtn").disabled = qty < 1;
+
+      // Update sticky bottom mini-bar
+      if ($("#miniTotal")) $("#miniTotal").textContent = rupiah(total);
+      if ($("#miniSummaryText")) {
+        const prodName = S.product ? S.product.name : "Kaos";
+        $("#miniSummaryText").textContent = `${qty} pcs \u2022 ${prodName}`;
+      }
     }
 
     function selectProduct(p) {
@@ -423,8 +535,23 @@
     function redrawAll() { drawModes(); drawLayerList(); drawProps(); drawPreview(); }
 
     // ---------- Aksi elemen ----------
-    function select(id) { S.sel = id; drawLayerList(); drawProps(); $$(".ly").forEach(n => n.classList.toggle("sel", +n.dataset.id === id)); }
-    function addLayer(l) { const n = layers().length % 5; if (l.x === .5 && l.y === .5 && n) { l.x += (n - 2) * .06; l.y += (n - 2) * .06; } layers().push(l); S.sel = l.id; drawLayerList(); drawProps(); drawPreview(); }
+    function select(id) {
+      S.sel = id;
+      if (id) switchPanelTab("desain");
+      drawLayerList();
+      drawProps();
+      $$(".ly").forEach(n => n.classList.toggle("sel", +n.dataset.id === id));
+    }
+    function addLayer(l) {
+      const n = layers().length % 5;
+      if (l.x === .5 && l.y === .5 && n) { l.x += (n - 2) * .06; l.y += (n - 2) * .06; }
+      layers().push(l);
+      S.sel = l.id;
+      switchPanelTab("desain");
+      drawLayerList();
+      drawProps();
+      drawPreview();
+    }
     function removeLayer(id) { const a = layers(), i = a.findIndex(l => l.id === id); if (i < 0) return; a.splice(i, 1); if (S.sel === id) S.sel = null; drawLayerList(); drawProps(); drawPreview(); }
     function moveLayer(id, d) {
       const a = layers(), i = a.findIndex(l => l.id === id), j = i + d;
@@ -453,7 +580,12 @@
     });
     $("#qtyBox").addEventListener("change", e => { if (e.target.dataset.s) setQty(e.target.dataset.s, e.target.value); });
 
-    $("#modes").addEventListener("click", e => { const o = e.target.closest(".opt"); if (!o) return; S.mode = o.dataset.mode; redrawAll(); });
+    $("#modes").addEventListener("click", e => {
+      const o = e.target.closest("[data-mode]");
+      if (!o) return;
+      S.mode = o.dataset.mode;
+      redrawAll();
+    });
     $("#sideTabs").addEventListener("click", e => {
       const b = e.target.closest("button");
       if (!b || b.disabled) return;
@@ -491,6 +623,13 @@
       const l = sel(), k = e.target.dataset.k; if (!l || !k) return;
       const t = e.target.type;
       l[k] = t === "checkbox" ? e.target.checked : t === "range" ? +e.target.value : e.target.value;
+      if (k === "s") {
+        const b = $("#lblValS"); if (b) b.textContent = l.s;
+      } else if (k === "r") {
+        const b = $("#lblValR"); if (b) b.textContent = l.r + "°";
+      } else if (k === "o") {
+        const b = $("#lblValO"); if (b) b.textContent = Math.round(l.o * 100) + "%";
+      }
       drawPreview();
     });
     $("#props").addEventListener("change", e => { if (e.target.dataset.k === "text") drawLayerList(); });
@@ -720,15 +859,6 @@
     $("#btnView2D").onclick = () => switchView("2d");
     $("#btnView3D").onclick = () => switchView("3d");
 
-    // Tombol Aksi Cepat Langsung di Model 3D (Apple Floating Action Dock)
-    if ($("#btn3DAddText")) $("#btn3DAddText").onclick = () => {
-      addLayer(T());
-      toast("Teks berhasil ditambahkan ke baju!");
-    };
-    if ($("#btn3DAddImg")) $("#btn3DAddImg").onclick = () => {
-      $("#imgFile").click();
-    };
-
     // Kontrol Viewport 3D
     $("#btnAutoRotate").onclick = () => {
       if (!window.Studio3D) return;
@@ -740,6 +870,16 @@
       if (window.Studio3D) window.Studio3D.setCameraAngle("depan");
       drawSideTabs();
       redrawAll();
+    };
+    if ($("#btnSnapshot3D")) $("#btnSnapshot3D").onclick = () => {
+      if (!window.Studio3D) return;
+      const dataUrl = window.Studio3D.exportSnapshot();
+      if (!dataUrl) return toast("Gagal mengambil foto 3D");
+      const a = document.createElement("a");
+      a.href = dataUrl;
+      a.download = `mockup-3d-${S.side || "depan"}.png`;
+      a.click();
+      toast("Foto 3D berhasil diunduh!");
     };
 
     // Callback Interaksi Langsung dari 3D ke UI
@@ -815,6 +955,7 @@
       drawMethods();
       const id = new URLSearchParams(location.search).get("product");
       selectProduct(p.find(x => x.id === id) || p[0]);
+      switchPanelTab("desain");
     }).catch(err => { $("#title").textContent = "Gagal memuat data: " + err.message; });
   </script>
 </body>
