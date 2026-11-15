@@ -30,8 +30,7 @@ function renderHeader(active) {
   headerEl.innerHTML = `
     <div class="container header-in">
       <a class="logo" href="index.html">
-        <img class="logo-img" src="assets/azka-printing-logo.jpeg" alt="Logo" onerror="this.style.display='none';this.nextElementSibling.style.display='inline-block'">
-        <span class="logo-dot" style="display:none"></span>
+        <img class="logo-img" src="assets/azka-printing-logo.jpeg" alt="Logo Azka Printing">
         <span class="logo-text">Azka Printing</span>
       </a>
       <nav>${links.map(([h, k, t]) => `<a href="${h}" class="${k === active ? "on" : ""}">${t}</a>`).join("")}</nav>

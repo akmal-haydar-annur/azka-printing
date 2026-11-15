@@ -18,9 +18,11 @@ Alurnya: pengunjung membuka web (Vercel), lalu web membaca dan menyimpan data ke
 
 ```
 azka-printing/
+├── assets/
+│   └── azka-printing-logo.jpeg -> logo resmi Azka Printing
 ├── index.html        -> halaman Katalog
 ├── studio.html       -> halaman Studio Desain + pemesanan
-├── orders.html       -> halaman Daftar Pesanan
+├── orders.html       -> halaman Lacak Pesanan
 ├── css/style.css     -> semua gaya tampilan
 ├── js/
 │   ├── config.js     -> URL & kunci Supabase (kamu isi sendiri)

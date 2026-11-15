@@ -4,8 +4,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="icon" type="image/jpeg" href="assets/azka-printing-logo.jpeg">
+  <link rel="apple-touch-icon" href="assets/azka-printing-logo.jpeg">
+  <meta property="og:image" content="assets/azka-printing-logo.jpeg">
   <title>Azka Printing - Lacak Pesanan</title>
-  <link rel="stylesheet" href="css/style.css?v=4">
+  <link rel="stylesheet" href="css/style.css?v=5">
 </head>
 <body>
   <header id="header"></header>
@@ -206,10 +208,10 @@
         await searchOrder(orderParam, false);
       } else {
         $("#trackResult").innerHTML = `
-          <div class="card empty" style="border-style:dashed">
-            <span style="font-size:32px">📦</span>
-            <b style="color:var(--ink);margin-top:8px;font-size:15px">Masukkan Nomor Pesanan Kamu</b>
-            <p class="sub">Nomor pesanan didapatkan setelah kamu menyelesaikan pemesanan di Studio Desain (format: AZK-XXXXX).</p>
+          <div class="card empty" style="border-style:dashed;padding:40px 20px">
+            <img src="assets/azka-printing-logo.jpeg" alt="Azka Printing" style="width:52px;height:52px;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,.1);margin-bottom:12px;object-fit:cover">
+            <b style="color:var(--ink);font-size:16px">Masukkan Nomor Pesanan Kamu</b>
+            <p class="sub" style="max-width:440px;margin:6px auto 0">Nomor pesanan didapatkan setelah kamu menyelesaikan pemesanan di Studio Desain (format: AZK-XXXXX).</p>
           </div>`;
       }
       await loadMyRecentOrders();
