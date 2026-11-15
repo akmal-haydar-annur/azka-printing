@@ -413,8 +413,9 @@ textarea.input{font-family:inherit;resize:vertical}
 .view-btn{
   border:0;background:none;padding:7px 18px;border-radius:var(--radius-pill);
   font-weight:600;font-size:13px;cursor:pointer;color:var(--muted);
-  transition:all .2s var(--ease-apple);
+  transition:all .2s var(--ease-apple);display:inline-flex;align-items:center;gap:6px;
 }
+.view-btn svg{flex:none}
 .view-btn:hover{color:var(--ink)}
 .view-btn.on{
   background:var(--primary);color:#fff;
@@ -440,8 +441,10 @@ textarea.input{font-family:inherit;resize:vertical}
 .v3d-btn{
   border:1px solid var(--line);background:#fff;padding:6px 12px;border-radius:var(--radius-pill);
   font-size:12px;font-weight:600;cursor:pointer;color:var(--ink);transition:all .18s var(--ease-apple);
-  display:inline-flex;align-items:center;gap:4px;white-space:nowrap;
+  display:inline-flex;align-items:center;gap:5px;white-space:nowrap;
 }
+.v3d-btn svg{flex:none}
+.v3d-btn.icon-only{padding:6px 9px}
 .v3d-btn:hover{background:#f9fafb;border-color:#d1d5db}
 .v3d-btn:active{transform:scale(0.96)}
 .v3d-btn.on{background:var(--primary);color:#fff;border-color:var(--primary);box-shadow:0 2px 6px var(--primary-ring)}

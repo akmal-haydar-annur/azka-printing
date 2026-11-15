@@ -96,8 +96,11 @@
       return `
         ${isNew ? `
           <div class="card" style="background:#ecfdf5;border-color:#a7f3d0;margin-bottom:16px;color:#065f46">
-            <b>🎉 Pesanan Berhasil Dibuat!</b>
-            <p style="margin-top:4px;font-size:13px">Simpan nomor pesanan kamu: <b>#${esc(o.order_no)}</b>. Silakan hubungi admin via WhatsApp untuk konfirmasi dan panduan pembayaran.</p>
+            <b style="font-size:15px;display:flex;align-items:center;gap:6px">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+              Pesanan Berhasil Dibuat
+            </b>
+            <p style="margin-top:6px;font-size:13px">Simpan nomor pesanan kamu: <b>#${esc(o.order_no)}</b>. Silakan hubungi admin via WhatsApp untuk konfirmasi dan panduan pembayaran.</p>
           </div>` : ""}
 
         <div class="card order" style="box-shadow:0 4px 16px rgba(0,0,0,.04)">

@@ -152,8 +152,8 @@
           </article>`;
       }).join("") : `
         <div class="empty" style="grid-column:1/-1;padding:60px 20px">
-          <div style="font-size:32px;margin-bottom:8px">🔍</div>
-          <b style="font-size:16px;color:var(--ink)">Produk Tidak Ditemukan</b>
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="color:var(--muted);margin-bottom:8px"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <b style="font-size:16px;color:var(--ink);display:block">Produk Tidak Ditemukan</b>
           <p class="sub" style="margin-top:4px">Tidak ada produk yang cocok dengan pencarian "<b>${esc(q)}</b>". Coba gunakan kata kunci lain.</p>
         </div>`;
     }
