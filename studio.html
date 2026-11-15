@@ -78,12 +78,6 @@
         <div class="card field"><label class="lbl">Warna Kaos: <span id="colorName" style="font-weight:500"></span></label>
           <div class="swatches" id="swatches"></div></div>
 
-        <!-- Customizer Warna Kerah 3D (Mockey.ai Style) -->
-        <div class="card field" id="neckColorCard" style="display:none">
-          <label class="lbl">Warna Kerah (Rib Neck): <span id="neckColorName" style="font-weight:500">Sama dengan Kaos</span></label>
-          <div class="swatches" id="neckSwatches"></div>
-        </div>
-
         <div class="card field"><label class="lbl">Cara Membuat Desain</label>
           <div class="modes" id="modes">
             <div class="opt on" data-mode="editor"><div><b>Desain Sendiri</b><small>Teks, gambar, bentuk &amp; template</small></div></div>
@@ -155,6 +149,9 @@
   <script src="js/ui.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/geometries/DecalGeometry.js"></script>
+  <script src="assets/models/tshirt-model.js"></script>
   <script src="js/three-studio.js"></script>
   <script>
     renderHeader("studio");
@@ -335,7 +332,6 @@
       $("#colorName").textContent = S.color.name;
       $("#swatches").innerHTML = S.product.colors.map((c, i) =>
         `<span class="sw ${c.hex === S.color.hex ? "on" : ""}" data-i="${i}" title="${esc(c.name)}" style="background:${c.hex}"></span>`).join("");
-      drawNeckSwatches();
       if (window.Studio3D && window.Studio3D.initialized) {
         window.Studio3D.syncFromStudioState(S);
       }
@@ -636,7 +632,6 @@
 
     // ===== Integrasi Preview 3D Realistis (Mockey.ai Style) =====
     let activeView = "2d";
-    let curNeckColor = null;
 
     function switchView(view) {
       activeView = view;
@@ -649,9 +644,6 @@
       $("#areas").style.display = is3D ? "none" : "flex";
       $("#stageNote").style.display = is3D ? "none" : "block";
       $("#viewport3D").style.display = is3D ? "flex" : "none";
-      if ($("#neckColorCard")) {
-        $("#neckColorCard").style.display = is3D && S.product && S.product.category === "kaos" ? "block" : "none";
-      }
 
       if (is3D) {
         if (window.Studio3D) {
@@ -659,7 +651,6 @@
             window.Studio3D.init($("#viewport3D"));
           }
           window.Studio3D.syncFromStudioState(S);
-          if (curNeckColor) window.Studio3D.setNeckColor(curNeckColor.hex);
           setTimeout(() => {
             if (window.Studio3D) {
               window.Studio3D.onResize();
@@ -706,25 +697,6 @@
         toast("Gagal mengambil foto 3D: " + e.message);
       }
     };
-
-    function drawNeckSwatches() {
-      const box = $("#neckSwatches");
-      if (!box || !S.product) return;
-      $("#neckColorName").textContent = curNeckColor ? curNeckColor.name : S.color.name;
-      box.innerHTML = S.product.colors.map(c => `
-        <span class="sw ${c.hex === (curNeckColor ? curNeckColor.hex : S.color.hex) ? "on" : ""}" 
-              data-hex="${c.hex}" title="${esc(c.name)}" style="background:${c.hex}"></span>
-      `).join("");
-      $$("#neckSwatches .sw").forEach(sw => {
-        sw.onclick = () => {
-          const hex = sw.dataset.hex;
-          curNeckColor = S.product.colors.find(c => c.hex === hex) || { name: hex, hex };
-          $("#neckColorName").textContent = curNeckColor.name;
-          $$("#neckSwatches .sw").forEach(s => s.classList.toggle("on", s.dataset.hex === hex));
-          if (window.Studio3D) window.Studio3D.setNeckColor(hex);
-        };
-      });
-    }
 
     // ---- Mulai ----
     Promise.all([DB.products(), DB.methods()]).then(([p, m]) => {
