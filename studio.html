@@ -1,0 +1,1650 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Azka Printing - Studio Desain</title>
+  <link rel="icon" type="image/jpeg" href="assets/azka-printing-logo.jpeg">
+  <link rel="apple-touch-icon" href="assets/azka-printing-logo.jpeg">
+  <meta property="og:image" content="assets/azka-printing-logo.jpeg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Anton&family=Bebas+Neue&family=Courier+Prime:ital,wght@0,400;0,700;1,400;1,700&family=Pacifico&family=Permanent+Marker&family=Playfair+Display:ital,wght@0,400;0,700;1,400;1,700&family=Poppins:ital,wght@0,400;0,700;1,400;1,700&family=Righteous&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css?v=8">
+</head>
+<body>
+  <header id="header"></header>
+  <main class="container">
+    <h1 id="title">Studio Desain</h1>
+    <p class="sub">Pilih warna, buat desain sendiri atau upload desain jadi, atur jumlah, lalu pesan.</p>
+
+    <div class="studio" style="margin-top:20px">
+      <!-- Pratinjau (Dual Mode: 2D & 3D Realistis) -->
+      <div class="stage">
+        <div class="stage-in">
+          <!-- Switcher Mode 2D vs 3D (Clean SVG Icons - No Emojis) -->
+          <div class="view-switch-seg">
+            <button type="button" class="view-btn on" id="btnView2D">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+              <span>Editor 2D</span>
+            </button>
+            <button type="button" class="view-btn" id="btnView3D">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+              <span>3D Realistis</span>
+            </button>
+          </div>
+
+          <!-- Mode 2D Stage Canvas -->
+          <div style="display:flex; align-items:center; justify-content:center; gap:8px; flex-wrap:wrap; margin-bottom:10px; width:100%;">
+            <div class="seg" id="sideTabs"></div>
+            <button type="button" class="btn sm ghost" id="btnPolaUtuh" title="Lihat Pola Potong Utuh Seluruh Bagian (Sublimasi)" style="padding:6px 14px; font-weight:600; font-size:12px; border-radius:var(--radius-pill); border:1px solid var(--line); display:inline-flex; align-items:center; gap:5px; background:#fff;">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+              <span>Pola Potong Utuh</span>
+            </button>
+          </div>
+          <div class="canvas" id="canvas">
+            <div id="shape"></div>
+            <div class="printarea" id="area"></div>
+          </div>
+          <div class="areas" id="areas"></div>
+          <p class="stage-note" id="stageNote">Pratinjau perkiraan. Tim kami cek ulang posisi desain sebelum produksi.</p>
+
+          <!-- Mode 3D Studio Viewport (Apple / Mockey Style) -->
+          <div class="viewport-3d" id="viewport3D" style="display:none">
+            <!-- Sleek Bottom Viewport Dock (Single Row Non-Wrapping) -->
+            <div class="v3d-controls">
+              <button type="button" class="v3d-btn" id="btnAngleDepan" title="Sudut Pandang Depan">
+                <span>Depan</span>
+              </button>
+              <button type="button" class="v3d-btn" id="btnAngleBelakang" title="Sudut Pandang Belakang">
+                <span>Belakang</span>
+              </button>
+              <button type="button" class="v3d-btn" id="btnAngleLk" title="Sudut Pandang Lengan Kiri">
+                <span>L. Kiri</span>
+              </button>
+              <button type="button" class="v3d-btn" id="btnAngleLkn" title="Sudut Pandang Lengan Kanan">
+                <span>L. Kanan</span>
+              </button>
+              <button type="button" class="v3d-btn" id="btnAngleKerah" title="Sudut Pandang Kerah">
+                <span>Kerah</span>
+              </button>
+              <button type="button" class="v3d-btn" id="btnAutoRotate" title="Putar Otomatis 360°">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+                <span>Putar 360°</span>
+              </button>
+              <button type="button" class="v3d-btn" id="btnSnapshot3D" title="Unduh Foto 3D">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                <span>Foto 3D</span>
+              </button>
+            </div>
+            <div class="v3d-hint">Pilih lapisan untuk geser &bull; Tombol panah untuk presisi &bull; Putar 360°</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pengaturan Studio -->
+      <div class="panel">
+        <div class="panel-tabs-wrap">
+          <div class="seg panel-tabs" id="panelTabs">
+            <button type="button" class="on" data-tab="desain">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+              <span>Desain</span>
+            </button>
+            <button type="button" data-tab="produk">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M20.38 3.46L16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z"/></svg>
+              <span>Bahan &amp; Warna</span>
+            </button>
+            <button type="button" data-tab="pesan">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+              <span>Ukuran &amp; Pesan</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- TAB 1: DESAIN -->
+        <div class="panel-tab-content" id="tabDesain">
+          <div class="seg-modes" id="modes">
+            <button type="button" class="on" data-mode="editor">Desain Sendiri</button>
+            <button type="button" data-mode="upload">Upload File Jadi</button>
+          </div>
+
+          <!-- MODE 1: editor -->
+          <div id="editorCard">
+            <!-- Tools Tambah Elemen -->
+            <div class="card field">
+              <div class="design-tools-row">
+                <button type="button" class="btn primary sm" id="addText" title="Tambah teks baru">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M4 7V4h16v3M9 20h6M12 4v16"/></svg>
+                  <span>+ Teks</span>
+                </button>
+                <button type="button" class="btn outline sm" id="addImg" title="Upload gambar atau logo">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                  <span>+ Gambar</span>
+                </button>
+                <button type="button" class="btn outline sm" id="addBrush" title="Gambar coretan atau tanda tangan bebas dengan kuas">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m9.06 11.9 8.07-8.06a2.85 2.85 0 1 1 4.03 4.03l-8.06 8.08"/><path d="M7.07 14.94c-1.66 0-3 1.35-3 3.02 0 1.33-2.5 1.52-2 2.02 1.08 1.1 2.49 2.02 4 2.02 2.2 0 4-1.8 4-4.04a3.01 3.01 0 0 0-3-3.02z"/></svg>
+                  <span>+ Kuas</span>
+                </button>
+                <input type="file" id="imgFile" accept="image/png,image/jpeg,image/svg+xml,image/webp" hidden>
+              </div>
+
+              <div class="sub-section">
+                <span class="lbl2">Bentuk Geometris</span>
+                <div class="shapes" id="shapes"></div>
+              </div>
+
+              <div class="sub-section">
+                <span class="lbl2">Mulai dari Template</span>
+                <div class="chips-scroll" id="tpls"></div>
+              </div>
+            </div>
+
+            <!-- Inspector Pengaturan Elemen Aktif & Lapisan -->
+            <div class="card field" id="propsCard">
+              <div class="inspector-hdr-row" id="propsHdr">
+                <label class="lbl" style="margin:0">Pengaturan Elemen</label>
+                <span class="sub" id="propsSub" style="font-size:12px;font-weight:600;color:var(--primary)"></span>
+              </div>
+              <div class="props" id="props" style="border-top:none;margin-top:6px;padding-top:0"></div>
+
+              <!-- Daftar Lapisan / Layers Terintegrasi -->
+              <div class="sub-section" id="layersSubSection" style="margin-top:10px">
+                <div class="layer-hdr-row">
+                  <span class="lbl2" style="margin:0">Lapisan di Sisi Ini</span>
+                  <span class="sub" id="layerCountText" style="font-size:11px"></span>
+                </div>
+                <div class="layers" id="layerList" style="margin-top:4px"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- MODE 2: upload -->
+          <div class="card field" id="uploadCard" hidden>
+            <label class="lbl">Sudah punya desain? Upload di sini</label>
+            <div id="uploadBox"></div>
+            <p class="sub" style="margin-top:10px">Atur ukuran area cetak lewat pilihan di bawah pratinjau. Untuk hasil terbaik, gunakan PNG transparan atau file vektor (SVG/PDF/AI/CDR).</p>
+          </div>
+        </div>
+
+        <!-- TAB 2: BAHAN & WARNA -->
+        <div class="panel-tab-content" id="tabProduk" hidden>
+          <div class="card field">
+            <label class="lbl">Produk</label>
+            <select id="product" class="input"></select>
+          </div>
+
+          <div class="card field">
+            <label class="lbl">Warna Bahan: <span id="colorName" style="font-weight:600;color:var(--primary)"></span></label>
+            <div class="swatches" id="swatches"></div>
+          </div>
+
+          <div class="card field">
+            <label class="lbl">Teknik Cetak</label>
+            <div id="methods"></div>
+          </div>
+
+          <div class="card field">
+            <label class="lbl">Catatan untuk Tim Produksi (opsional)</label>
+            <textarea id="note" class="input" rows="2" maxlength="300" placeholder="Contoh: logo di dada kiri, ukuran sekitar 8 cm"></textarea>
+          </div>
+        </div>
+
+        <!-- TAB 3: UKURAN & PESAN -->
+        <div class="panel-tab-content" id="tabPesan" hidden>
+          <div class="card field">
+            <label class="lbl" id="qtyLabel">Ukuran &amp; Jumlah</label>
+            <div id="qtyBox"></div>
+          </div>
+
+          <div class="card summary">
+            <div class="row"><span>Harga satuan</span><span id="sUnit"></span></div>
+            <div class="row"><span>Jumlah</span><span id="sQty"></span></div>
+            <div class="row"><span>Subtotal</span><span id="sSub"></span></div>
+            <div class="row disc"><span id="sDiscLbl">Diskon grosir</span><span id="sDisc"></span></div>
+            <div class="row total"><span>Total</span><span id="sTotal"></span></div>
+            <button class="btn accent block" id="orderBtn" style="margin-top:14px">Pesan Sekarang</button>
+            <button type="button" class="btn outline block" id="btnVendorPack" style="margin-top:8px" title="Unduh lembar kerja produksi (Tech Pack) dan berkas sablon 300 DPI">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              <span>Unduh Paket Vendor (.ZIP)</span>
+            </button>
+            <p class="sub" style="text-align:center">Diskon: 5% (12 pcs), 10% (24 pcs), 15% (50 pcs)</p>
+          </div>
+        </div>
+
+        <!-- Sticky Quick Mini-Bar at bottom of panel -->
+        <div class="panel-mini-bar" id="panelMiniBar">
+          <div class="mini-bar-info">
+            <span class="mini-bar-sub" id="miniSummaryText">1 pcs &bull; Kaos Cotton</span>
+            <b class="mini-bar-total" id="miniTotal">Rp 85.000</b>
+          </div>
+          <button type="button" class="btn primary sm" id="btnQuickNext">
+            <span id="btnQuickNextText">Bahan &amp; Warna &rarr;</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Modal Kuas / Coretan Bebas & Tanda Tangan -->
+  <div class="modal-bg" id="brushModal">
+    <div class="modal brush-modal">
+      <div class="brush-header">
+        <div class="brush-header-title">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m9.06 11.9 8.07-8.06a2.85 2.85 0 1 1 4.03 4.03l-8.06 8.08"/><path d="M7.07 14.94c-1.66 0-3 1.35-3 3.02 0 1.33-2.5 1.52-2 2.02 1.08 1.1 2.49 2.02 4 2.02 2.2 0 4-1.8 4-4.04a3.01 3.01 0 0 0-3-3.02z"/></svg>
+          <span id="brushModalTitle">Kuas &amp; Coretan Bebas</span>
+        </div>
+        <button type="button" class="brush-close-btn" id="closeBrushModal" title="Tutup">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+
+      <!-- Controls Row 1: Mode (Kuas vs Penghapus) + Undo + Bersihkan -->
+      <div class="brush-toolbar">
+        <div class="brush-mode-seg">
+          <button type="button" class="brush-seg-btn active" id="brushModeDraw" title="Mode Menggambar">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="m9.06 11.9 8.07-8.06a2.85 2.85 0 1 1 4.03 4.03l-8.06 8.08"/></svg>
+            <span>Kuas</span>
+          </button>
+          <button type="button" class="brush-seg-btn" id="brushModeErase" title="Mode Penghapus">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="m7 21-4.3-4.3c-1-1-1-2.5 0-3.4l9.6-9.6c1-1 2.5-1 3.4 0l5.6 5.6c1 1 1 2.5 0 3.4L13 21"/><path d="M22 21H7"/><path d="m5 11 9 9"/></svg>
+            <span>Penghapus</span>
+          </button>
+        </div>
+
+        <div class="brush-actions-right">
+          <button type="button" class="btn outline xs" id="brushUndoBtn" title="Batalkan goresan terakhir">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"/></svg>
+            <span>Undo</span>
+          </button>
+          <button type="button" class="btn outline xs" id="brushClearBtn" title="Hapus semua coretan">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+            <span>Bersihkan</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Controls Row 2: Brush Size & Colors -->
+      <div class="brush-palette-bar">
+        <div class="brush-sizes-group">
+          <span class="brush-label">Ukuran:</span>
+          <div class="brush-sizes" id="brushSizes">
+            <button type="button" class="brush-size-dot" data-size="3" title="Halus (3px)"><span style="width:4px;height:4px"></span></button>
+            <button type="button" class="brush-size-dot active" data-size="6" title="Sedang (6px)"><span style="width:8px;height:8px"></span></button>
+            <button type="button" class="brush-size-dot" data-size="12" title="Tebal (12px)"><span style="width:13px;height:13px"></span></button>
+            <button type="button" class="brush-size-dot" data-size="24" title="Spidol (24px)"><span style="width:18px;height:18px"></span></button>
+          </div>
+        </div>
+
+        <div class="brush-colors-group" id="brushColorsGroup">
+          <span class="brush-label">Warna:</span>
+          <div class="brush-swatches" id="brushSwatches"></div>
+          <div class="brush-custom-color-wrap" title="Pilih warna bebas">
+            <input type="color" id="brushCustomColor" value="#111827">
+          </div>
+        </div>
+      </div>
+
+      <!-- Interactive Drawing Area -->
+      <div class="brush-canvas-container">
+        <canvas id="brushCanvas" width="800" height="560"></canvas>
+        <div class="brush-canvas-hint">Gambar tanda tangan atau coretan bebas di sini</div>
+      </div>
+
+      <!-- Footer Buttons -->
+      <div class="brush-footer">
+        <button type="button" class="btn outline sm" id="cancelBrushBtn">Batal</button>
+        <button type="button" class="btn primary sm" id="applyBrushBtn">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+          <span id="applyBrushBtnText">Pasang di Baju</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Form data pemesan -->
+  <div class="modal-bg" id="modal">
+    <form class="modal" id="form">
+      <h2>Data Pemesan</h2>
+      <input class="input" id="cName" placeholder="Nama lengkap" required>
+      <input class="input" id="cPhone" placeholder="No. WhatsApp (08xxxxxxxxxx)" inputmode="tel" required pattern="[0-9+ ]{8,16}">
+      <button class="btn primary block" id="submitBtn">Konfirmasi Pesanan</button>
+      <button type="button" class="btn block" id="cancelBtn">Batal</button>
+    </form>
+  </div>
+
+  <!-- Modal Pola Potong Utuh Sublimasi (5 Bagian Terpisah Sesuai Spesifikasi Produksi) -->
+  <div class="modal-bg" id="modalPolaUtuh">
+    <div class="modal" style="max-width:880px; width:95%; max-height:92vh; display:flex; flex-direction:column; padding:20px; border-radius:18px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; padding-bottom:10px; border-bottom:1px solid var(--line);">
+        <div>
+          <h3 style="margin:0; font-size:17px; font-weight:700; color:var(--ink);">Pola Potong Apparel (Sublimasi)</h3>
+          <p style="margin:2px 0 0; font-size:12px; color:var(--muted);">5 bagian pola potong kaos sublimasi (Badan Depan, Belakang, Lengan Kiri, Kanan, Kerah). Klik bagian manapun untuk mengedit di studio.</p>
+        </div>
+        <button type="button" class="btn sm ghost" id="btnClosePolaUtuh" style="padding:4px 10px; font-weight:600;">Tutup</button>
+      </div>
+      
+      <div id="polaUtuhContainer" style="flex:1; overflow-y:auto; background:#f1f5f9; border:1px solid var(--line); border-radius:12px; padding:12px; display:flex; justify-content:center; align-items:center;">
+      </div>
+      
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-top:12px; padding-top:10px; border-top:1px solid var(--line); flex-wrap:wrap; gap:8px;">
+        <div style="font-size:12px; color:var(--muted); display:flex; align-items:center; gap:6px;">
+          <span>Warna:</span>
+          <span id="polaUtuhColorDot" style="display:inline-block; width:14px; height:14px; border-radius:50%; border:1px solid rgba(0,0,0,.2);"></span>
+          <span id="polaUtuhColorName" style="font-weight:600; color:var(--ink);">-</span>
+          <span style="margin-left:8px; color:var(--muted);">&bull; Standar Produksi Olahraga (Pola Potong Laser 1:1)</span>
+        </div>
+        <div style="display:flex; gap:8px;">
+          <button type="button" class="btn sm ghost" id="btnDownloadPolaPNG">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+            <span>Unduh Lembar Pola (.PNG)</span>
+          </button>
+          <button type="button" class="btn sm primary" id="btnDonePolaUtuh">Selesai Meninjau</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/config.js"></script>
+  <script src="js/db.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/geometries/DecalGeometry.js"></script>
+  <script src="assets/models/tshirt-model.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <script src="js/vendor-export.js"></script>
+  <script src="js/three-studio.js"></script>
+  <script>
+    renderHeader("studio");
+    const $$ = (s, el = document) => [...el.querySelectorAll(s)];
+    const SIZES = ["S", "M", "L", "XL", "XXL", "3XL"];
+    const SURCHARGE = { XXL: 5000, "3XL": 10000 };
+    // Biaya tambahan per pcs bila sisi BELAKANG ikut dicetak. Isi angka (mis. 15000) jika ingin dikenakan biaya.
+    const BACK_SURCHARGE = 0;
+    const discountRate = q => q >= 50 ? 0.15 : q >= 24 ? 0.10 : q >= 12 ? 0.05 : 0;
+    const MAX_IMG = 5 * 1024 * 1024, MAX_UP = 15 * 1024 * 1024;
+
+    const FONTS = [["Poppins", "Modern"], ["Bebas Neue", "Tegas"], ["Anton", "Tebal"], ["Playfair Display", "Elegan"],
+      ["Pacifico", "Tulisan tangan"], ["Permanent Marker", "Spidol"], ["Courier Prime", "Mesin ketik"], ["Righteous", "Retro"]];
+    const COLORS = ["#111827", "#ffffff", "#dc2626", "#f97316", "#facc15", "#16a34a", "#2563eb", "#7c3aed", "#ec4899", "#9ca3af"];
+    const SHAPES = {
+      kotak: ["Kotak", "M5 5H95V95H5Z"],
+      bulat: ["Lingkaran", "M50 5a45 45 0 1 0 0 90a45 45 0 1 0 0-90Z"],
+      segitiga: ["Segitiga", "M50 6L95 92H5Z"],
+      ketupat: ["Belah ketupat", "M50 4L96 50L50 96L4 50Z"],
+      bintang: ["Bintang", "M50 5L61.8 36.8 95.6 38.2 69 59.2 78.2 91.8 50 73 21.8 91.8 31 59.2 4.4 38.2 38.2 36.8Z"],
+      hati: ["Hati", "M50 90C20 66 6 48 6 30 6 16 17 6 30 6 40 6 47 12 50 19 53 12 60 6 70 6 83 6 94 16 94 30 94 48 80 66 50 90Z"],
+      petir: ["Petir", "M58 4L18 56H46L40 96L82 40H54Z"],
+      mahkota: ["Mahkota", "M8 78L14 28 34 50 50 18 66 50 86 28 92 78Z"],
+      garis: ["Garis", "M4 44H96V56H4Z"]
+    };
+    window.SHAPES = SHAPES;
+    // [kunci, label, left%, top%, lebar%, tinggi%] terhadap kanvas pratinjau
+    const AREAS = {
+      kaos: [["std", "Standar (A4)", 30, 32, 40, 36], ["saku", "Dada Kiri / Saku", 54, 28, 18, 16], ["dada_kanan", "Dada Kanan", 28, 28, 18, 16], ["besar", "Besar (A3)", 24, 26, 52, 50], ["full", "Full Badan", 18, 16, 64, 78]],
+      depan: [["std", "Standar (A4)", 30, 32, 40, 36], ["saku", "Dada Kiri / Saku", 54, 28, 18, 16], ["dada_kanan", "Dada Kanan", 28, 28, 18, 16], ["besar", "Besar (A3)", 24, 26, 52, 50], ["full", "Full Badan", 18, 16, 64, 78]],
+      belakang: [["std", "Standar (A4)", 30, 30, 40, 36], ["nape", "Punggung Atas", 36, 18, 28, 14], ["besar", "Besar (A3)", 24, 24, 52, 52], ["full", "Full Punggung", 18, 16, 64, 78]],
+      mug: [["kecil", "Kecil", 34, 36, 22, 24], ["std", "Standar", 27, 30, 36, 38], ["besar", "Besar", 25, 26, 40, 46]],
+      totebag: [["kecil", "Kecil", 37, 45, 26, 22], ["std", "Standar", 30, 42, 40, 38], ["besar", "Besar", 26, 38, 48, 50]],
+      akrilik: [["kecil", "Kecil", 38, 35, 24, 28], ["std", "Standar", 33, 31, 34, 38], ["besar", "Besar", 30, 28, 40, 46]],
+      lengan: [["std", "Standar (8x8)", 30, 35, 40, 32], ["vertikal", "Vertikal (6x20)", 35, 20, 30, 60], ["full", "Full Lengan", 20, 15, 60, 75]],
+      kerah: [["std", "Tengah Kerah", 30, 38, 40, 24], ["full", "Full Kerah", 12, 34, 76, 32]]
+    };
+    AREAS.hoodie = AREAS.kaos;
+
+    let products = [], methods = [], uid = 0, drag = null;
+    const S = { product: null, color: null, method: null, sizes: {}, qty: 1,
+      mode: "editor", side: "depan", area: "std", sel: null,
+      sides: { depan: [], belakang: [], lengan_kiri: [], lengan_kanan: [], kerah: [] },
+      up: { depan: null, belakang: null, lengan_kiri: null, lengan_kanan: null, kerah: null } };
+
+    const cat = () => S.product ? S.product.category : "kaos";
+    const canBack = () => cat() !== "mug";
+    const isApparel = () => cat() === "kaos" || cat() === "hoodie";
+    const areaList = () => {
+      if (isApparel()) {
+        if (S.side === "lengan_kiri" || S.side === "lengan_kanan") return AREAS.lengan;
+        if (S.side === "belakang") return AREAS.belakang;
+        if (S.side === "kerah") return AREAS.kerah;
+        return AREAS.depan;
+      }
+      return AREAS[cat()] || AREAS.kaos;
+    };
+    const areaDef = () => areaList().find(a => a[0] === S.area) || areaList().find(a => a[0] === "std") || areaList()[0];
+    const layers = () => S.sides[S.side] || (S.sides[S.side] = []);
+    const sel = () => layers().find(l => l.id === S.sel);
+    const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+    const lum = h => { const n = parseInt(h.slice(1), 16); return (0.299 * (n >> 16) + 0.587 * ((n >> 8) & 255) + 0.114 * (n & 255)) / 255; };
+    const ink = () => lum(S.color.hex) > 0.6 ? "#111827" : "#ffffff";
+
+    // ---------- Pembuat elemen ----------
+    const base = o => ({ id: ++uid, x: .5, y: .5, s: 20, r: 0, o: 1, ...o });
+    const T = o => base({ type: "text", text: "Teks kamu", font: "Poppins", bold: true, italic: false, align: "center", color: ink(), stroke: false, strokeColor: "#000000", s: 14, ...o });
+    const SH = (shape, o) => base({ type: "shape", shape, color: "#f97316", fill: true, s: 30, ...o });
+
+    const TEMPLATES = [
+      ["Nama + Nomor", () => [T({ text: "AZKA", font: "Anton", s: 20, y: .32 }), T({ text: "10", font: "Anton", s: 46, y: .72 })]],
+      ["Kutipan", () => [T({ text: "STAY\nHUNGRY", font: "Bebas Neue", s: 24, y: .42 }), T({ text: "est. 2026", font: "Courier Prime", bold: false, s: 9, y: .85 })]],
+      ["Badge Komunitas", () => [SH("bulat", { s: 92, fill: false, color: ink() }), SH("bintang", { s: 22, y: .3, color: "#facc15" }),
+        T({ text: "COMMUNITY", font: "Righteous", s: 12, y: .56 }), T({ text: "since 2026", font: "Pacifico", bold: false, s: 9, y: .72 })]],
+      ["Retro", () => [T({ text: "SUMMER", font: "Righteous", s: 20, y: .4, color: "#f97316" }), SH("garis", { s: 60, y: .54, color: ink() }),
+        T({ text: "CLUB 2026", font: "Poppins", s: 9, y: .66 })]],
+      ["Logo Dada", () => [T({ text: "NAMA BRAND", font: "Poppins", s: 18, y: .5 })]]
+    ];
+
+    // ---------- Gambar pratinjau ----------
+    function layerHTML(l) {
+      const st = `left:${l.x * 100}%;top:${l.y * 100}%;--s:${l.s};opacity:${l.o};transform:translate(-50%,-50%) rotate(${l.r}deg)${l.flip ? " scaleX(-1)" : ""};`;
+      const on = l.id === S.sel ? " sel" : "";
+      if (l.type === "text") {
+        const ex = `font-family:'${l.font}',sans-serif;font-weight:${l.bold ? 700 : 400};font-style:${l.italic ? "italic" : "normal"};text-align:${l.align};color:${l.color};` +
+          (l.stroke ? `-webkit-text-stroke:calc(var(--s)*.12cqw) ${l.strokeColor};paint-order:stroke fill;` : "");
+        return `<div class="ly t${on}" data-id="${l.id}" style="${st}${ex}">${esc(l.text)}</div>`;
+      }
+      if (l.type === "image" || l.type === "brush") return `<div class="ly b${on}" data-id="${l.id}" style="${st}"><img src="${l.src || l.dataUrl}" alt=""></div>`;
+      const shapeDef = SHAPES[l.shape] || SHAPES.kotak;
+      const p = shapeDef[1];
+      const paint = l.fill ? `fill="${l.color}"` : `fill="none" stroke="${l.color}" stroke-width="7" stroke-linejoin="round"`;
+      return `<div class="ly b shape-box${on}" data-id="${l.id}" style="${st}"><svg viewBox="0 0 100 100" width="100%" height="100%"><path d="${p}" ${paint}/></svg></div>`;
+    }
+
+    function drawPreview() {
+      $("#shape").innerHTML = productSVG(cat(), S.color.hex, S.side);
+      const a = areaDef(), el = $("#area");
+      Object.assign(el.style, { left: a[2] + "%", top: a[3] + "%", width: a[4] + "%", height: a[5] + "%" });
+      if (S.mode === "editor") {
+        el.innerHTML = layers().map(layerHTML).join("");
+      } else {
+        const u = S.up[S.side];
+        el.innerHTML = u ? (u.isImg ? `<img class="upimg" src="${u.url}" alt="desain">`
+          : `<div class="filecard"><span class="fileext">${esc(u.ext)}</span><small>${esc(u.name)}</small></div>`)
+          : `<div class="phold">Desain kamu<br>tampil di sini</div>`;
+      }
+      el.classList.toggle("editing", S.mode === "editor");
+      $("#stageNote").textContent = S.mode === "editor"
+        ? "Seret elemen untuk memindahkan. Pratinjau perkiraan; tim kami cek ulang posisi sebelum produksi."
+        : "Pratinjau perkiraan. Tim kami cek ulang posisi & ukuran desain sebelum produksi.";
+      calc();
+      if (window.Studio3D && window.Studio3D.initialized) {
+        window.Studio3D.renderZoneToCanvas(S, S.side);
+        const zData = window.Studio3D.zones[S.side];
+        if (zData && zData.texture) zData.texture.needsUpdate = true;
+        window.Studio3D.requestRender();
+      }
+    }
+
+    const hasSide = s => S.mode === "editor" ? (S.sides[s] && S.sides[s].length > 0) : !!(S.up && S.up[s]);
+    const sideList = () => {
+      if (isApparel()) {
+        return [
+          ["depan", "Badan Depan"],
+          ["belakang", "Badan Belakang"],
+          ["lengan_kiri", "Lengan Kiri"],
+          ["lengan_kanan", "Lengan Kanan"],
+          ["kerah", "Kerah / Rib"]
+        ];
+      }
+      return [
+        ["depan", "Depan"],
+        ...(canBack() ? [["belakang", "Belakang"]] : [])
+      ];
+    };
+    function drawSideTabs() {
+      const list = sideList();
+      $("#sideTabs").innerHTML = list.map(([s, label]) =>
+        `<button type="button" data-side="${s}" class="${S.side === s ? "on" : ""}">${label}${hasSide(s) ? "<i></i>" : ""}</button>`).join("");
+    }
+    function drawAreas() {
+      $("#areas").innerHTML = `<span>Area cetak:</span>` + areaList().map(a =>
+        `<span class="chip sm ${a[0] === areaDef()[0] ? "on" : ""}" data-a="${a[0]}">${a[1]}</span>`).join("");
+    }
+    function drawModes() {
+      $$("#modes [data-mode]").forEach(o => o.classList.toggle("on", o.dataset.mode === S.mode));
+      $("#editorCard").hidden = S.mode !== "editor";
+      $("#uploadCard").hidden = S.mode !== "upload";
+    }
+
+    let activePanelTab = "desain";
+    function switchPanelTab(tab) {
+      activePanelTab = tab;
+      $$("#panelTabs button").forEach(b => b.classList.toggle("on", b.dataset.tab === tab));
+      $("#tabDesain").hidden = tab !== "desain";
+      $("#tabProduk").hidden = tab !== "produk";
+      $("#tabPesan").hidden = tab !== "pesan";
+
+      const miniBar = $("#panelMiniBar"), btn = $("#btnQuickNext"), txt = $("#btnQuickNextText");
+      if (miniBar && btn && txt) {
+        if (tab === "pesan") {
+          miniBar.style.display = "none";
+        } else {
+          miniBar.style.display = "flex";
+          if (tab === "desain") {
+            txt.innerHTML = "Bahan &amp; Warna &rarr;";
+            btn.onclick = () => switchPanelTab("produk");
+          } else if (tab === "produk") {
+            txt.innerHTML = "Ukuran &amp; Pesan &rarr;";
+            btn.onclick = () => switchPanelTab("pesan");
+          }
+        }
+      }
+    }
+    $("#panelTabs").addEventListener("click", e => {
+      const b = e.target.closest("[data-tab]");
+      if (b) switchPanelTab(b.dataset.tab);
+    });
+
+    function drawLayerList() {
+      const nm = l => l.type === "text" ? l.text.split("\n")[0] || "(kosong)" : l.type === "brush" ? (l.name || "Coretan Kuas") : l.type === "image" ? l.name : (SHAPES[l.shape] ? SHAPES[l.shape][0] : "Bentuk");
+      const ic = l => l.type === "text" ? "T" : l.type === "brush" ? "K" : l.type === "image" ? "G" : "B";
+      const ls = [...layers()].reverse();
+      if ($("#layerCountText")) $("#layerCountText").textContent = ls.length ? `(${ls.length} elemen)` : "";
+      $("#layerList").innerHTML = ls.length ? ls.map(l => `
+        <div class="lrow ${l.id === S.sel ? "on" : ""}" data-id="${l.id}">
+          <span class="ic">${ic(l)}</span><span class="nm">${esc(nm(l))}</span>
+          <button type="button" data-act="up" title="Naikkan posisi lapisan">↑</button>
+          <button type="button" data-act="down" title="Turunkan posisi lapisan">↓</button>
+          <button type="button" data-act="del" title="Hapus elemen"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+        </div>`).join("")
+        : `<p class="sub" style="margin:0;font-size:11.5px">Belum ada elemen di sisi ini. Klik <b>+ Teks</b> atau pilih <b>Bentuk</b> untuk mulai.</p>`;
+      drawSideTabs();
+    }
+
+    const colorRow = (key, val) => `<div class="cpick">${COLORS.map(c => `<button type="button" class="c" data-color="${c}" data-key="${key}" style="background:${c}" title="${c}"></button>`).join("")}
+      <input type="color" data-k="${key}" value="${val}"></div>`;
+
+    function drawProps() {
+      const l = sel(), box = $("#props");
+      if (!l) {
+        if ($("#propsSub")) $("#propsSub").textContent = "";
+        box.innerHTML = `<div class="props-empty"><p class="sub" style="margin:0">Pilih elemen pada model kaos atau pilih dari daftar lapisan untuk mengatur teks, font, warna, atau ukuran.</p></div>`;
+        return;
+      }
+      const title = l.type === "text" ? "Teks" : l.type === "brush" ? "Coretan Kuas" : l.type === "image" ? "Gambar" : (SHAPES[l.shape] ? SHAPES[l.shape][0] : "Bentuk");
+      if ($("#propsSub")) $("#propsSub").textContent = `(${title})`;
+      let h = "";
+      if (l.type === "text") {
+        h += `<label class="fl">Isi Teks</label><textarea class="input" rows="2" maxlength="80" data-k="text">${esc(l.text)}</textarea>
+          <div class="two" style="margin-top:8px">
+            <div><label class="fl">Font</label><select class="input" data-k="font">${FONTS.map(([f, n]) =>
+              `<option value="${f}" ${f === l.font ? "selected" : ""}>${f} - ${n}</option>`).join("")}</select></div>
+            <div><label class="fl">Gaya Huruf</label><div class="tbtn">
+              <button type="button" data-act="bold" class="${l.bold ? "on" : ""}"><b>B</b></button>
+              <button type="button" data-act="italic" class="${l.italic ? "on" : ""}"><i>I</i></button></div></div>
+          </div>
+          <label class="fl" style="margin-top:10px">Perataan Teks</label><div class="tbtn">
+            ${[["left", "Kiri"], ["center", "Tengah"], ["right", "Kanan"]].map(([v, t]) => `<button type="button" data-act="al-${v}" class="${l.align === v ? "on" : ""}">${t}</button>`).join("")}</div>
+          <label class="fl" style="margin-top:10px">Warna Huruf</label>${colorRow("color", l.color)}
+          <label class="chk"><input type="checkbox" data-k="stroke" ${l.stroke ? "checked" : ""}> Garis tepi huruf (Outline)</label>
+          <div class="cpick" style="margin-top:6px"><small class="sub" style="margin:0">Warna garis tepi</small><input type="color" data-k="strokeColor" value="${l.strokeColor}"></div>`;
+      } else if (l.type === "shape") {
+        h += `<label class="fl">Warna Bentuk</label>${colorRow("color", l.color)}
+          <label class="chk"><input type="checkbox" data-k="fill" ${l.fill ? "checked" : ""}> Isi penuh (matikan untuk garis luar saja)</label>`;
+      } else if (l.type === "brush") {
+        h += `
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+            <div style="width:40px;height:40px;background:#f3f4f6;border-radius:8px;padding:3px;display:flex;align-items:center;justify-content:center;border:1px solid var(--line-subtle);flex-shrink:0">
+              <img src="${l.dataUrl || l.src}" style="max-width:100%;max-height:100%;object-fit:contain" alt="">
+            </div>
+            <div style="flex:1">
+              <p class="sub" style="margin:0 0 4px;font-weight:600;color:var(--ink)">${esc(l.name || "Coretan Kuas")}</p>
+              <button type="button" class="btn outline xs" id="btnEditBrushLayer" style="padding:3px 8px;font-size:11px">Edit Coretan</button>
+            </div>
+          </div>
+          <div class="tbtn"><button type="button" data-act="flip" class="${l.flip ? "on" : ""}">Balik horizontal</button></div>`;
+      } else {
+        h += `<p class="sub" style="margin:0 0 6px">${esc(l.name)}</p><div class="tbtn"><button type="button" data-act="flip" class="${l.flip ? "on" : ""}">Balik horizontal</button></div>`;
+      }
+      const [mn, mx] = l.type === "text" ? [4, 70] : [4, 120];
+      h += `
+        <div class="slider-row" style="margin-top:10px">
+          <div class="slider-hdr"><span class="fl">Ukuran</span><span class="val-badge" id="lblValS">${l.s}</span></div>
+          <input class="rng" type="range" min="${mn}" max="${mx}" step="1" value="${l.s}" data-k="s">
+        </div>
+        <div class="two" style="margin-top:8px">
+          <div class="slider-row">
+            <div class="slider-hdr"><span class="fl">Putar</span><span class="val-badge" id="lblValR">${l.r}°</span></div>
+            <input class="rng" type="range" min="-180" max="180" step="1" value="${l.r}" data-k="r">
+          </div>
+          <div class="slider-row">
+            <div class="slider-hdr"><span class="fl">Transparansi</span><span class="val-badge" id="lblValO">${Math.round(l.o * 100)}%</span></div>
+            <input class="rng" type="range" min="0.15" max="1" step="0.05" value="${l.o}" data-k="o">
+          </div>
+        </div>
+        <div class="pact" style="margin-top:12px">
+          <button type="button" class="btn sm" data-act="center">Tengahkan</button>
+          <button type="button" class="btn sm" data-act="dup">Duplikat</button>
+          <button type="button" class="btn sm danger" data-act="del">Hapus</button>
+        </div>
+        <div style="font-size:11px;color:var(--muted);background:#f9fafb;padding:6px 8px;border-radius:6px;border:1px solid var(--line-subtle);margin-top:8px;display:flex;align-items:center;gap:6px">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="flex:none"><path d="M5 9l7-7 7 7M5 15l7 7 7-7"/></svg>
+          <span>Gunakan tombol <b>panah keyboard</b> untuk geser presisi (<b>Shift</b> + Panah untuk geser cepat)</span>
+        </div>`;
+      box.innerHTML = h;
+      if ($("#btnEditBrushLayer")) {
+        $("#btnEditBrushLayer").onclick = () => openBrushModal(l.id);
+      }
+    }
+
+    function drawUploads() {
+      const side = (s, title) => {
+        const u = S.up[s];
+        return `<div><div class="sdl">${title}</div><label class="drop" data-side="${s}">
+          <input type="file" data-side="${s}" accept=".png,.jpg,.jpeg,.svg,.webp,.pdf,.ai,.psd,.cdr,.eps" hidden>
+          ${u ? `<span class="got"><span class="fileext">${esc(u.ext)}</span>${esc(u.name)}</span><small>Klik untuk ganti file</small>
+              <button type="button" class="btn sm danger" data-rm="${s}">Hapus file</button>`
+            : `<b>Klik atau seret file ke sini</b><small>PNG, JPG, SVG, WEBP, PDF, AI, PSD, CDR, EPS &middot; maks 15 MB</small>`}</label></div>`;
+      };
+      $("#uploadBox").innerHTML = side("depan", "Sisi depan") + (canBack() ? side("belakang", "Sisi belakang (opsional)") : "");
+    }
+
+    function drawSwatches() {
+      $("#colorName").textContent = S.color.name;
+      $("#swatches").innerHTML = S.product.colors.map((c, i) =>
+        `<span class="sw ${c.hex === S.color.hex ? "on" : ""}" data-i="${i}" title="${esc(c.name)}" style="background:${c.hex}"></span>`).join("");
+      if (window.Studio3D && window.Studio3D.initialized) {
+        window.Studio3D.syncFromStudioState(S);
+      }
+    }
+    function drawMethods() {
+      $("#methods").innerHTML = methods.map(m => `
+        <div class="opt ${m.id === S.method.id ? "on" : ""}" data-id="${m.id}">
+          <div><b>${esc(m.name)}</b><small>${esc(m.description)}</small></div>
+          <span class="price">+${rupiah(m.extra_price)}</span></div>`).join("");
+    }
+    function drawQty() {
+      if (S.product.has_sizes) {
+        $("#qtyLabel").textContent = "Ukuran & Jumlah";
+        $("#qtyBox").innerHTML = `<div class="sizes">${SIZES.map(s => `
+          <div class="size"><b>${s}</b>${SURCHARGE[s] ? `<small>+${rupiah(SURCHARGE[s])}</small>` : ""}
+            <div class="qty"><button type="button" data-s="${s}" data-d="-1">-</button>
+              <input value="${S.sizes[s] || 0}" data-s="${s}" inputmode="numeric">
+              <button type="button" data-s="${s}" data-d="1">+</button></div></div>`).join("")}</div>`;
+      } else {
+        $("#qtyLabel").textContent = "Jumlah";
+        $("#qtyBox").innerHTML = `<div class="qty"><button type="button" data-s="_" data-d="-1">-</button>
+          <input value="${S.qty}" data-s="_" inputmode="numeric"><button type="button" data-s="_" data-d="1">+</button></div>`;
+      }
+    }
+    function setQty(key, val) {
+      val = Math.max(0, Math.min(9999, parseInt(val) || 0));
+      if (key === "_") S.qty = Math.max(1, val); else S.sizes[key] = val;
+      drawQty(); calc();
+    }
+    function calc() {
+      const back = canBack() && hasSide("belakang");
+      const unit = S.product.base_price + S.method.extra_price + (back ? BACK_SURCHARGE : 0);
+      let qty = 0, sub = 0;
+      if (S.product.has_sizes) {
+        for (const [s, n] of Object.entries(S.sizes)) { qty += n; sub += n * (unit + (SURCHARGE[s] || 0)); }
+      } else { qty = S.qty; sub = qty * unit; }
+      const rate = discountRate(qty), disc = Math.round(sub * rate), total = sub - disc;
+      Object.assign(S, { unit, totalQty: qty, sub, disc, total });
+      $("#sUnit").textContent = rupiah(unit);
+      $("#sQty").textContent = qty + " pcs";
+      $("#sSub").textContent = rupiah(sub);
+      $("#sDiscLbl").textContent = "Diskon grosir (" + rate * 100 + "%)";
+      $("#sDisc").textContent = "-" + rupiah(disc);
+      $("#sTotal").textContent = rupiah(total);
+      $("#orderBtn").disabled = qty < 1;
+
+      // Update sticky bottom mini-bar
+      if ($("#miniTotal")) $("#miniTotal").textContent = rupiah(total);
+      if ($("#miniSummaryText")) {
+        const prodName = S.product ? S.product.name : "Kaos";
+        $("#miniSummaryText").textContent = `${qty} pcs \u2022 ${prodName}`;
+      }
+    }
+
+    function selectProduct(p) {
+      S.product = p; S.color = p.colors[0]; S.sizes = {}; S.qty = 1; S.area = "std"; S.sel = null;
+      if (p.has_sizes) S.sizes = { M: 1 };
+      if (!canBack()) S.side = "depan";
+      $("#product").value = p.id; $("#title").textContent = p.name;
+      drawSwatches(); drawQty(); drawAreas(); drawUploads(); redrawAll();
+    }
+    function redrawAll() { drawModes(); drawLayerList(); drawProps(); drawPreview(); }
+
+    // ---------- Aksi elemen ----------
+    function select(id) {
+      S.sel = id;
+      if (id) switchPanelTab("desain");
+      drawLayerList();
+      drawProps();
+      $$(".ly").forEach(n => n.classList.toggle("sel", +n.dataset.id === id));
+      if (window.Studio3D && window.Studio3D.initialized) {
+        window.Studio3D.syncFromStudioState(S);
+      }
+    }
+    function addLayer(l) {
+      if (!l.id) l.id = ++uid;
+      if (typeof l.x !== "number" || isNaN(l.x)) l.x = 0.5;
+      if (typeof l.y !== "number" || isNaN(l.y)) l.y = 0.5;
+      if (typeof l.s !== "number") l.s = 30;
+      if (typeof l.r !== "number") l.r = 0;
+      if (typeof l.o !== "number") l.o = 1;
+      const n = layers().length % 5;
+      if (l.x === .5 && l.y === .5 && n) { l.x += (n - 2) * .06; l.y += (n - 2) * .06; }
+      layers().push(l);
+      S.sel = l.id;
+      switchPanelTab("desain");
+      drawLayerList();
+      drawProps();
+      drawPreview();
+      if (window.Studio3D && window.Studio3D.initialized) {
+        window.Studio3D.syncFromStudioState(S);
+      }
+    }
+    function removeLayer(id) { const a = layers(), i = a.findIndex(l => l.id === id); if (i < 0) return; a.splice(i, 1); if (S.sel === id) S.sel = null; drawLayerList(); drawProps(); drawPreview(); }
+    function moveLayer(id, d) {
+      const a = layers(), i = a.findIndex(l => l.id === id), j = i + d;
+      if (i < 0 || j < 0 || j >= a.length) return;
+      [a[i], a[j]] = [a[j], a[i]]; drawLayerList(); drawPreview();
+    }
+
+    async function addImage(file) {
+      if (!file) return;
+      if (file.size > MAX_IMG) return toast("Ukuran gambar maksimal 5 MB");
+      const src = URL.createObjectURL(file), img = new Image();
+      await new Promise(r => { img.onload = r; img.onerror = r; img.src = src; });
+      if (!img.naturalWidth) return toast("Gambar tidak bisa dibaca");
+      const ratio = img.naturalHeight / img.naturalWidth;
+      addLayer(base({ type: "image", src, img, file, name: file.name, ratio, s: ratio > 1.2 ? 40 : 60 }));
+    }
+
+    // ---------- Event ----------
+    $("#product").addEventListener("change", e => selectProduct(products.find(p => p.id === e.target.value)));
+    $("#swatches").addEventListener("click", e => {
+      if (e.target.dataset.i) {
+        S.color = S.product.colors[e.target.dataset.i];
+        if (window.Studio3D && window.Studio3D.initialized) {
+          window.Studio3D.setBodyColor(S.color.hex);
+        }
+        drawSwatches();
+        drawPreview();
+      }
+    });
+    $("#methods").addEventListener("click", e => { const o = e.target.closest(".opt"); if (!o) return; S.method = methods.find(m => m.id === o.dataset.id); drawMethods(); calc(); });
+    $("#qtyBox").addEventListener("click", e => {
+      const b = e.target.closest("button"); if (!b) return;
+      const key = b.dataset.s, cur = key === "_" ? S.qty : (S.sizes[key] || 0);
+      setQty(key, cur + parseInt(b.dataset.d));
+    });
+    $("#qtyBox").addEventListener("change", e => { if (e.target.dataset.s) setQty(e.target.dataset.s, e.target.value); });
+
+    $("#modes").addEventListener("click", e => {
+      const o = e.target.closest("[data-mode]");
+      if (!o) return;
+      S.mode = o.dataset.mode;
+      redrawAll();
+    });
+    $("#sideTabs").addEventListener("click", e => {
+      const b = e.target.closest("button");
+      if (!b || b.disabled) return;
+      S.side = b.dataset.side;
+      S.sel = null;
+      if (window.Studio3D && window.Studio3D.initialized) {
+        window.Studio3D.setCameraAngle(S.side);
+      }
+      drawSideTabs();
+      drawAreas();
+      redrawAll();
+    });
+    $("#areas").addEventListener("click", e => { const c = e.target.closest("[data-a]"); if (!c) return; S.area = c.dataset.a; drawAreas(); drawPreview(); });
+
+    $("#tpls").innerHTML = TEMPLATES.map((t, i) => `<span class="chip sm" data-t="${i}">${t[0]}</span>`).join("") + `<span class="chip sm" data-t="clear">Kosongkan</span>`;
+    $("#tpls").addEventListener("click", e => {
+      const c = e.target.closest("[data-t]"); if (!c) return;
+      if (layers().length && !confirm("Ganti semua elemen di sisi ini?")) return;
+      S.sides[S.side] = c.dataset.t === "clear" ? [] : TEMPLATES[+c.dataset.t][1]();
+      S.sel = null; drawLayerList(); drawProps(); drawPreview();
+    });
+    $("#shapes").innerHTML = Object.entries(SHAPES).map(([k, [n, p]]) =>
+      `<button type="button" data-shape="${k}" title="${n}"><svg viewBox="0 0 100 100"><path d="${p}" fill="#4338ca"/></svg></button>`).join("");
+    $("#shapes").addEventListener("click", e => { const b = e.target.closest("[data-shape]"); if (b) addLayer(SH(b.dataset.shape, { color: lum(S.color.hex) > .6 ? "#4338ca" : "#f97316" })); });
+    $("#addText").onclick = () => addLayer(T());
+    $("#addImg").onclick = () => $("#imgFile").click();
+    $("#imgFile").addEventListener("change", e => { addImage(e.target.files[0]); e.target.value = ""; });
+
+    // ==========================================
+    // Fitur Studio Kuas / Coretan Bebas (Brush Tool)
+    // ==========================================
+    let editingBrushLayerId = null;
+    let brushCanvasInited = false;
+    let brushMode = "draw"; // "draw" | "erase"
+    let brushSize = 6;
+    let brushColor = "#111827";
+    let isDrawing = false;
+    let brushPoints = [];
+    let brushHistory = [];
+    const MAX_BRUSH_HISTORY = 25;
+
+    const BRUSH_SWATCHES = [
+      "#111827", "#ffffff", "#ef4444", "#f97316", "#eab308",
+      "#16a34a", "#2563eb", "#8b5cf6", "#ec4899", "#6b7280"
+    ];
+
+    function saveBrushHistory(cv) {
+      if (!cv) return;
+      const ctx = cv.getContext("2d");
+      if (brushHistory.length >= MAX_BRUSH_HISTORY) brushHistory.shift();
+      brushHistory.push(ctx.getImageData(0, 0, cv.width, cv.height));
+    }
+
+    function initBrushCanvas() {
+      const cv = $("#brushCanvas");
+      if (!cv) return;
+      const ctx = cv.getContext("2d");
+
+      // Setup palet warna kuas
+      const swatchesBox = $("#brushSwatches");
+      if (swatchesBox && !swatchesBox.children.length) {
+        swatchesBox.innerHTML = BRUSH_SWATCHES.map(c =>
+          `<button type="button" class="brush-swatch ${c === brushColor ? 'active' : ''}" data-color="${c}" style="background:${c}" title="${c}"></button>`
+        ).join("");
+        swatchesBox.addEventListener("click", e => {
+          const btn = e.target.closest(".brush-swatch");
+          if (!btn) return;
+          brushColor = btn.dataset.color;
+          swatchesBox.querySelectorAll(".brush-swatch").forEach(s => s.classList.remove("active"));
+          btn.classList.add("active");
+          $("#brushCustomColor").value = brushColor.startsWith("#") && brushColor.length === 7 ? brushColor : "#111827";
+          setBrushMode("draw");
+        });
+      }
+
+      // Ukuran kuas
+      const sizesBox = $("#brushSizes");
+      if (sizesBox && !sizesBox.dataset.bound) {
+        sizesBox.dataset.bound = "1";
+        sizesBox.addEventListener("click", e => {
+          const btn = e.target.closest(".brush-size-dot");
+          if (!btn) return;
+          brushSize = +btn.dataset.size;
+          sizesBox.querySelectorAll(".brush-size-dot").forEach(s => s.classList.remove("active"));
+          btn.classList.add("active");
+        });
+      }
+
+      // Custom color
+      const customCol = $("#brushCustomColor");
+      if (customCol && !customCol.dataset.bound) {
+        customCol.dataset.bound = "1";
+        customCol.addEventListener("input", e => {
+          brushColor = e.target.value;
+          swatchesBox.querySelectorAll(".brush-swatch").forEach(s => s.classList.remove("active"));
+          setBrushMode("draw");
+        });
+      }
+
+      // Mode Seg
+      $("#brushModeDraw").onclick = () => setBrushMode("draw");
+      $("#brushModeErase").onclick = () => setBrushMode("erase");
+
+      // Undo & Clear
+      $("#brushUndoBtn").onclick = () => {
+        if (brushHistory.length > 0) {
+          const prev = brushHistory.pop();
+          ctx.putImageData(prev, 0, 0);
+        } else {
+          ctx.clearRect(0, 0, cv.width, cv.height);
+        }
+      };
+      $("#brushClearBtn").onclick = () => {
+        if (!confirm("Bersihkan seluruh kanvas coretan?")) return;
+        saveBrushHistory(cv);
+        ctx.clearRect(0, 0, cv.width, cv.height);
+      };
+
+      if (brushCanvasInited) return;
+      brushCanvasInited = true;
+
+      // Pointer drawing events
+      const getCoords = (e) => {
+        const rect = cv.getBoundingClientRect();
+        return {
+          x: (e.clientX - rect.left) * (cv.width / rect.width),
+          y: (e.clientY - rect.top) * (cv.height / rect.height)
+        };
+      };
+
+      const startDraw = (e) => {
+        e.preventDefault();
+        try { cv.setPointerCapture(e.pointerId); } catch (_) {}
+        isDrawing = true;
+        saveBrushHistory(cv);
+        const pt = getCoords(e);
+        brushPoints = [pt];
+
+        ctx.save();
+        ctx.lineCap = "round";
+        ctx.lineJoin = "round";
+        if (brushMode === "erase") {
+          ctx.globalCompositeOperation = "destination-out";
+          ctx.fillStyle = "rgba(0,0,0,1)";
+        } else {
+          ctx.globalCompositeOperation = "source-over";
+          ctx.fillStyle = brushColor;
+        }
+        ctx.beginPath();
+        ctx.arc(pt.x, pt.y, (brushSize * (brushMode === "erase" ? 2.5 : 1)) / 2, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      };
+
+      const moveDraw = (e) => {
+        if (!isDrawing) return;
+        e.preventDefault();
+        const pt = getCoords(e);
+        brushPoints.push(pt);
+        if (brushPoints.length < 2) return;
+
+        ctx.save();
+        ctx.lineCap = "round";
+        ctx.lineJoin = "round";
+        const effSize = brushSize * (brushMode === "erase" ? 2.5 : 1);
+        ctx.lineWidth = effSize;
+
+        if (brushMode === "erase") {
+          ctx.globalCompositeOperation = "destination-out";
+          ctx.strokeStyle = "rgba(0,0,0,1)";
+        } else {
+          ctx.globalCompositeOperation = "source-over";
+          ctx.strokeStyle = brushColor;
+        }
+
+        const p1 = brushPoints[brushPoints.length - 2];
+        const p2 = brushPoints[brushPoints.length - 1];
+        const midPoint = { x: (p1.x + p2.x) / 2, y: (p1.y + p2.y) / 2 };
+
+        ctx.beginPath();
+        ctx.moveTo(p1.x, p1.y);
+        ctx.quadraticCurveTo(p1.x, p1.y, midPoint.x, midPoint.y);
+        ctx.stroke();
+        ctx.restore();
+      };
+
+      const stopDraw = (e) => {
+        if (isDrawing) {
+          try { cv.releasePointerCapture(e.pointerId); } catch (_) {}
+          isDrawing = false;
+          brushPoints = [];
+        }
+      };
+
+      cv.addEventListener("pointerdown", startDraw);
+      cv.addEventListener("pointermove", moveDraw);
+      cv.addEventListener("pointerup", stopDraw);
+      cv.addEventListener("pointercancel", stopDraw);
+      cv.addEventListener("pointerleave", stopDraw);
+    }
+
+    function setBrushMode(mode) {
+      brushMode = mode;
+      $("#brushModeDraw").classList.toggle("active", mode === "draw");
+      $("#brushModeErase").classList.toggle("active", mode === "erase");
+      $("#brushColorsGroup").style.opacity = mode === "erase" ? "0.4" : "1";
+      $("#brushColorsGroup").style.pointerEvents = mode === "erase" ? "none" : "auto";
+    }
+
+    function openBrushModal(layerId = null) {
+      editingBrushLayerId = layerId;
+      initBrushCanvas();
+      brushHistory = [];
+      const cv = $("#brushCanvas");
+      const ctx = cv.getContext("2d");
+
+      if (layerId) {
+        const l = layers().find(x => x.id === layerId);
+        if (l) {
+          $("#brushModalTitle").textContent = "Edit Coretan Kuas";
+          $("#applyBrushBtnText").textContent = "Simpan Perubahan";
+          ctx.clearRect(0, 0, cv.width, cv.height);
+          const im = l.img || new Image();
+          const drawExisting = () => {
+            const aspect = im.naturalHeight / im.naturalWidth;
+            let dw = Math.min(cv.width * 0.75, 520);
+            let dh = dw * aspect;
+            if (dh > cv.height * 0.75) {
+              dh = cv.height * 0.75;
+              dw = dh / aspect;
+            }
+            const dx = (cv.width - dw) / 2;
+            const dy = (cv.height - dh) / 2;
+            ctx.drawImage(im, dx, dy, dw, dh);
+            saveBrushHistory(cv);
+          };
+          if (im.complete && im.naturalWidth) {
+            drawExisting();
+          } else {
+            im.crossOrigin = "anonymous";
+            im.onload = drawExisting;
+            im.src = l.dataUrl || l.src;
+          }
+        }
+      } else {
+        $("#brushModalTitle").textContent = "Kuas & Coretan Bebas";
+        $("#applyBrushBtnText").textContent = "Pasang di Baju";
+        ctx.clearRect(0, 0, cv.width, cv.height);
+        const autoColor = lum(S.color.hex) > 0.6 ? "#111827" : "#ffffff";
+        brushColor = autoColor;
+        setBrushMode("draw");
+        const swatchesBox = $("#brushSwatches");
+        if (swatchesBox) {
+          swatchesBox.querySelectorAll(".brush-swatch").forEach(s => {
+            s.classList.toggle("active", s.dataset.color.toLowerCase() === autoColor.toLowerCase());
+          });
+        }
+      }
+
+      $("#brushModal").classList.add("show");
+    }
+
+    function closeBrushModal() {
+      $("#brushModal").classList.remove("show");
+      editingBrushLayerId = null;
+    }
+
+    $("#closeBrushModal").onclick = closeBrushModal;
+    $("#cancelBrushBtn").onclick = closeBrushModal;
+    $("#addBrush").onclick = () => openBrushModal();
+
+    $("#applyBrushBtn").onclick = () => {
+      const cv = $("#brushCanvas");
+      const ctx = cv.getContext("2d");
+      const imgData = ctx.getImageData(0, 0, cv.width, cv.height);
+      const data = imgData.data;
+      let minX = cv.width, minY = cv.height, maxX = -1, maxY = -1;
+
+      for (let y = 0; y < cv.height; y++) {
+        for (let x = 0; x < cv.width; x++) {
+          const alpha = data[(y * cv.width + x) * 4 + 3];
+          if (alpha > 8) {
+            if (x < minX) minX = x;
+            if (x > maxX) maxX = x;
+            if (y < minY) minY = y;
+            if (y > maxY) maxY = y;
+          }
+        }
+      }
+
+      if (maxX === -1) {
+        toast("Silakan buat coretan terlebih dahulu.");
+        return;
+      }
+
+      const padding = 16;
+      minX = Math.max(0, minX - padding);
+      minY = Math.max(0, minY - padding);
+      maxX = Math.min(cv.width, maxX + padding);
+      maxY = Math.min(cv.height, maxY + padding);
+
+      const cropW = maxX - minX;
+      const cropH = maxY - minY;
+
+      const cropCv = document.createElement("canvas");
+      cropCv.width = cropW;
+      cropCv.height = cropH;
+      const cropCtx = cropCv.getContext("2d");
+      cropCtx.drawImage(cv, minX, minY, cropW, cropH, 0, 0, cropW, cropH);
+      const dataUrl = cropCv.toDataURL("image/png");
+
+      const img = new Image();
+      img.onload = () => {
+        if (editingBrushLayerId) {
+          const l = layers().find(x => x.id === editingBrushLayerId);
+          if (l) {
+            l.dataUrl = dataUrl;
+            l.src = dataUrl;
+            l.img = img;
+            l.ratio = cropH / cropW;
+          }
+          toast("Coretan kuas berhasil diperbarui!");
+        } else {
+          addLayer(base({
+            type: "brush",
+            name: "Coretan Kuas",
+            dataUrl: dataUrl,
+            src: dataUrl,
+            img: img,
+            ratio: cropH / cropW,
+            s: 35,
+            r: 0,
+            o: 1,
+            flip: false
+          }));
+          toast("Coretan kuas berhasil dipasang di baju!");
+        }
+        redrawAll();
+        closeBrushModal();
+      };
+      img.src = dataUrl;
+    };
+
+    $("#layerList").addEventListener("click", e => {
+      const row = e.target.closest(".lrow"); if (!row) return;
+      const id = +row.dataset.id, act = e.target.dataset.act;
+      if (act === "del") removeLayer(id); else if (act === "up") moveLayer(id, 1); else if (act === "down") moveLayer(id, -1); else select(id);
+    });
+
+    // Properti: input langsung mengubah pratinjau (tanpa menggambar ulang panel agar slider tidak putus)
+    $("#props").addEventListener("input", e => {
+      const l = sel(), k = e.target.dataset.k; if (!l || !k) return;
+      const t = e.target.type;
+      l[k] = t === "checkbox" ? e.target.checked : t === "range" ? +e.target.value : e.target.value;
+      if (k === "s") {
+        const b = $("#lblValS"); if (b) b.textContent = l.s;
+      } else if (k === "r") {
+        const b = $("#lblValR"); if (b) b.textContent = l.r + "°";
+      } else if (k === "o") {
+        const b = $("#lblValO"); if (b) b.textContent = Math.round(l.o * 100) + "%";
+      }
+      drawPreview();
+    });
+    $("#props").addEventListener("change", e => {
+      const l = sel(), k = e.target.dataset.k;
+      if (e.target.type === "checkbox" && l && k) {
+        l[k] = e.target.checked;
+        drawPreview();
+      }
+      if (k === "text") drawLayerList();
+      if (k === "font" || k === "strokeColor") drawPreview();
+    });
+    $("#props").addEventListener("click", e => {
+      const l = sel(); if (!l) return;
+      const c = e.target.closest("[data-color]");
+      if (c) { l[c.dataset.key] = c.dataset.color; drawProps(); drawPreview(); return; }
+      const b = e.target.closest("[data-act]"); if (!b) return;
+      const a = b.dataset.act;
+      if (a === "bold") l.bold = !l.bold; else if (a === "italic") l.italic = !l.italic; else if (a === "flip") l.flip = !l.flip;
+      else if (a.startsWith("al-")) l.align = a.slice(3);
+      else if (a === "center") { l.x = .5; l.y = .5; }
+      else if (a === "dup") { const n = { ...l, id: ++uid, x: clamp(l.x + .05, 0, 1), y: clamp(l.y + .05, 0, 1) }; layers().push(n); S.sel = n.id; drawLayerList(); }
+      else if (a === "del") return removeLayer(l.id);
+      drawProps(); drawPreview();
+    });
+
+    // Seret elemen di pratinjau
+    $("#area").addEventListener("pointerdown", e => {
+      if (S.mode !== "editor") return;
+      const el = e.target.closest(".ly");
+      if (!el) { if (S.sel) select(null); return; }
+      const l = layers().find(x => x.id === +el.dataset.id); if (!l) return;
+      if (S.sel !== l.id) select(l.id);
+      drag = { l, el, sx: e.clientX, sy: e.clientY, ox: l.x, oy: l.y, rect: $("#area").getBoundingClientRect() };
+      el.setPointerCapture(e.pointerId); el.style.cursor = "grabbing";
+    });
+    $("#area").addEventListener("pointermove", e => {
+      if (!drag) return;
+      drag.l.x = clamp(drag.ox + (e.clientX - drag.sx) / drag.rect.width, 0, 1);
+      drag.l.y = clamp(drag.oy + (e.clientY - drag.sy) / drag.rect.height, 0, 1);
+      drag.el.style.left = drag.l.x * 100 + "%"; drag.el.style.top = drag.l.y * 100 + "%";
+      if (window.Studio3D && window.Studio3D.initialized) {
+        window.Studio3D.renderZoneToCanvas(S, S.side);
+        const zData = window.Studio3D.zones[S.side];
+        if (zData && zData.texture) zData.texture.needsUpdate = true;
+        window.Studio3D.requestRender();
+      }
+    });
+    const endDrag = () => {
+      if (drag) {
+        drag.el.style.cursor = "";
+        drag = null;
+        drawProps();
+        if (window.Studio3D && window.Studio3D.initialized) {
+          window.Studio3D.syncFromStudioState(S);
+        }
+      }
+    };
+    $("#area").addEventListener("pointerup", endDrag); $("#area").addEventListener("pointercancel", endDrag);
+
+    // Upload desain jadi
+    function setUpload(side, file) {
+      if (!file) return;
+      if (file.size > MAX_UP) return toast("Ukuran file maksimal 15 MB");
+      const ext = (file.name.split(".").pop() || "FILE").toUpperCase().slice(0, 4);
+      const isImg = /^image\/(png|jpe?g|svg\+xml|webp|gif)$/.test(file.type);
+      S.up[side] = { file, name: file.name, ext, isImg, url: isImg ? URL.createObjectURL(file) : null };
+      if (S.side !== side) S.side = side;
+      drawUploads(); drawSideTabs(); drawPreview();
+    }
+    $("#uploadBox").addEventListener("change", e => { if (e.target.type === "file") setUpload(e.target.dataset.side, e.target.files[0]); });
+    $("#uploadBox").addEventListener("click", e => {
+      const rm = e.target.closest("[data-rm]"); if (!rm) return;
+      e.preventDefault(); S.up[rm.dataset.rm] = null; drawUploads(); drawSideTabs(); drawPreview();
+    });
+    ["dragover", "dragleave", "drop"].forEach(ev => $("#uploadBox").addEventListener(ev, e => {
+      const d = e.target.closest(".drop"); if (!d) return;
+      e.preventDefault(); d.classList.toggle("over", ev === "dragover");
+      if (ev === "drop") setUpload(d.dataset.side, e.dataTransfer.files[0]);
+    }));
+
+    // ---------- Render file siap cetak (PNG transparan) ----------
+    async function renderSide(side, W) {
+      const a = areaDef(), H = Math.round(W / ((a[4] * 200) / (a[5] * 220)));
+      const cv = document.createElement("canvas"); cv.width = W; cv.height = H;
+      const ctx = cv.getContext("2d"), ls = S.sides[side];
+      const fonts = new Set(ls.filter(l => l.type === "text").map(l => l.font));
+      await Promise.all([...fonts].flatMap(f => [`400 40px "${f}"`, `700 40px "${f}"`, `italic 400 40px "${f}"`, `italic 700 40px "${f}"`].map(s => document.fonts.load(s).catch(() => {}))));
+      for (const l of ls) {
+        ctx.save(); ctx.translate(l.x * W, l.y * H); ctx.rotate(l.r * Math.PI / 180); ctx.globalAlpha = l.o;
+        if (l.flip) ctx.scale(-1, 1);
+        if (l.type === "text") {
+          const px = l.s / 100 * W, lh = px * 1.15, lines = l.text.split("\n");
+          ctx.font = `${l.italic ? "italic " : ""}${l.bold ? 700 : 400} ${px}px "${l.font}", sans-serif`;
+          ctx.textBaseline = "middle"; ctx.textAlign = l.align; ctx.lineJoin = "round"; ctx.fillStyle = l.color;
+          const bw = Math.max(...lines.map(t => ctx.measureText(t).width));
+          const ax = l.align === "left" ? -bw / 2 : l.align === "right" ? bw / 2 : 0;
+          lines.forEach((t, i) => {
+            const y = (i - (lines.length - 1) / 2) * lh;
+            if (l.stroke) { ctx.lineWidth = px * .12; ctx.strokeStyle = l.strokeColor; ctx.strokeText(t, ax, y); }
+            ctx.fillText(t, ax, y);
+          });
+        } else if (l.type === "image" || l.type === "brush") {
+          let imgObj = l.img;
+          if (!imgObj || !imgObj.complete) {
+            imgObj = await new Promise(r => {
+              const im = new Image();
+              im.crossOrigin = "anonymous";
+              im.onload = () => r(im);
+              im.onerror = () => r(null);
+              im.src = l.src || l.dataUrl;
+            });
+            if (imgObj) l.img = imgObj;
+          }
+          if (imgObj) {
+            const ratio = l.ratio || (imgObj.naturalHeight / imgObj.naturalWidth) || 1;
+            const w = l.s / 100 * W;
+            ctx.drawImage(imgObj, -w / 2, -w * ratio / 2, w, w * ratio);
+          }
+        } else {
+          const w = l.s / 100 * W; ctx.translate(-w / 2, -w / 2); ctx.scale(w / 100, w / 100);
+          const p = new Path2D(SHAPES[l.shape][1]);
+          if (l.fill) { ctx.fillStyle = l.color; ctx.fill(p); }
+          else { ctx.strokeStyle = l.color; ctx.lineWidth = 7; ctx.lineJoin = "round"; ctx.stroke(p); }
+        }
+        ctx.restore();
+      }
+      return new Promise(r => cv.toBlob(r, "image/png"));
+    }
+
+    async function buildDesign() {
+      const out = { design_url: null, design_back_url: null, design_text: null, design_mode: S.mode };
+      const dj = { mode: S.mode, hex: S.color.hex, area: S.area, sides: {}, files: [] };
+      const urls = {};
+      const activeSides = isApparel() ? ["depan", "belakang", "lengan_kiri", "lengan_kanan", "kerah"] : ["depan", ...(canBack() ? ["belakang"] : [])];
+
+      if (S.mode === "upload") {
+        for (const s of activeSides) {
+          const u = S.up[s]; if (!u) continue;
+          urls[s] = await DB.uploadDesign(u.file);
+          dj.files.push({ side: s, name: u.name });
+        }
+      } else {
+        const texts = [];
+        for (const s of activeSides) {
+          const ls = S.sides[s]; if (!ls || !ls.length) continue;
+          const blob = await renderSide(s, DB.live ? 2400 : 600);
+          urls[s] = await DB.uploadDesign(new File([blob], `desain-${s}.png`, { type: "image/png" }));
+          const saved = [];
+          for (const l of ls) {
+            const { id, img, file, src, ...rest } = l;
+            if (l.type === "image") rest.url = file ? await DB.uploadDesign(file) : null;
+            if (l.type === "brush") {
+              rest.dataUrl = l.dataUrl;
+              rest.name = l.name || "Coretan Kuas";
+            }
+            if (l.type === "text") {
+              const prefix = s === "belakang" ? "[Belakang] " : s === "kerah" ? "[Kerah] " : s.startsWith("lengan") ? `[${s === "lengan_kiri" ? "Lengan Kiri" : "Lengan Kanan"}] ` : "";
+              texts.push(prefix + l.text.replace(/\n/g, " / "));
+            }
+            saved.push(rest);
+          }
+          dj.sides[s] = saved;
+        }
+        out.design_text = texts.join(" | ") || null;
+      }
+      out.design_url = urls.depan || null;
+      out.design_back_url = urls.belakang || null;
+      out.design_json = dj;
+      return out;
+    }
+
+    $("#orderBtn").onclick = () => {
+      const activeSides = isApparel() ? ["depan", "belakang", "lengan_kiri", "lengan_kanan", "kerah"] : ["depan", ...(canBack() ? ["belakang"] : [])];
+      const hasAnyDesign = activeSides.some(s => hasSide(s));
+      if (!hasAnyDesign && !confirm("Belum ada desain. Lanjut memesan tanpa desain?")) return;
+      $("#modal").classList.add("show");
+    };
+    $("#cancelBtn").onclick = () => $("#modal").classList.remove("show");
+
+    $("#form").addEventListener("submit", async e => {
+      e.preventDefault();
+      const btn = $("#submitBtn");
+      const name = $("#cName").value.trim();
+      let phone = $("#cPhone").value.trim();
+
+      if (!name) return toast("Nama lengkap pemesan wajib diisi.");
+      let cleanPhone = phone.replace(/\D/g, "");
+      if (cleanPhone.startsWith("62")) cleanPhone = "0" + cleanPhone.slice(2);
+      if (!cleanPhone.startsWith("08") || cleanPhone.length < 10 || cleanPhone.length > 15) {
+        return toast("Nomor WhatsApp tidak valid. Gunakan format 08xxxxxxxxxx (10-15 digit).");
+      }
+      if (!S.totalQty || S.totalQty < 1) {
+        return toast("Jumlah pesanan minimal 1 pcs.");
+      }
+
+      btn.disabled = true; btn.textContent = "Menyimpan pesanan...";
+      try {
+        const d = await buildDesign();
+        const sizeQty = S.product.has_sizes ? Object.fromEntries(Object.entries(S.sizes).filter(([, n]) => n > 0)) : { Satuan: S.qty };
+        const order = {
+          order_no: "AZK-" + Math.floor(10000 + Math.random() * 90000),
+          customer_name: name,
+          customer_phone: cleanPhone,
+          status: "menunggu_bayar",
+          total: S.total
+        };
+        const item = {
+          product_id: DB.live ? S.product.id : null,
+          product_name: S.product.name,
+          method: S.method.name,
+          color: S.color.name,
+          size_qty: sizeQty,
+          qty: S.totalQty,
+          unit_price: S.unit,
+          subtotal: S.total,
+          design_url: d.design_url,
+          design_text: d.design_text,
+          design_back_url: d.design_back_url,
+          design_json: d.design_json,
+          design_mode: d.design_mode,
+          design_note: $("#note").value.trim() || null
+        };
+        if (!DB.live) item.category = S.product.category;
+        await DB.createOrder(order, [item]);
+        location.href = "orders.html?baru=" + order.order_no;
+      } catch (err) {
+        toast("Gagal menyimpan: " + err.message);
+        btn.disabled = false; btn.textContent = "Konfirmasi Pesanan";
+      }
+    });
+
+    // ===== Integrasi Preview 3D Realistis (Mockey.ai Style) =====
+    let activeView = "2d";
+
+    function switchView(view) {
+      activeView = view;
+      $("#btnView2D").classList.toggle("on", view === "2d");
+      $("#btnView3D").classList.toggle("on", view === "3d");
+
+      const is3D = view === "3d";
+      $("#canvas").style.display = is3D ? "none" : "block";
+      $("#sideTabs").style.display = "inline-flex";
+      $("#areas").style.display = is3D ? "none" : "flex";
+      $("#stageNote").style.display = is3D ? "none" : "block";
+      $("#viewport3D").style.display = is3D ? "flex" : "none";
+
+      if (is3D) {
+        if (window.Studio3D) {
+          if (!window.Studio3D.initialized) {
+            window.Studio3D.init($("#viewport3D"));
+          }
+          window.Studio3D.syncFromStudioState(S);
+          if (S.side) window.Studio3D.setCameraAngle(S.side);
+          setTimeout(() => {
+            if (window.Studio3D) {
+              window.Studio3D.onResize();
+              window.Studio3D.requestRender();
+            }
+          }, 50);
+        }
+      } else {
+        if (window.Studio3D && window.Studio3D.isAutoRotate) {
+          window.Studio3D.toggleAutoRotate(false);
+          $("#btnAutoRotate").classList.remove("on");
+        }
+      }
+    }
+
+    $("#btnView2D").onclick = () => switchView("2d");
+    $("#btnView3D").onclick = () => switchView("3d");
+
+    // Kontrol Viewport 3D Preset Sudut Pandang
+    const set3DAngle = (side) => {
+      S.side = side;
+      S.sel = null;
+      if (window.Studio3D && window.Studio3D.initialized) {
+        window.Studio3D.setCameraAngle(side);
+      }
+      drawSideTabs();
+      drawAreas();
+      redrawAll();
+    };
+
+    $("#btnAngleDepan")?.addEventListener("click", () => set3DAngle("depan"));
+    $("#btnAngleBelakang")?.addEventListener("click", () => set3DAngle("belakang"));
+    $("#btnAngleLk")?.addEventListener("click", () => set3DAngle("lengan_kiri"));
+    $("#btnAngleLkn")?.addEventListener("click", () => set3DAngle("lengan_kanan"));
+    $("#btnAngleKerah")?.addEventListener("click", () => set3DAngle("kerah"));
+
+    $("#btnAutoRotate")?.addEventListener("click", () => {
+      if (!window.Studio3D) return;
+      const on = window.Studio3D.toggleAutoRotate();
+      $("#btnAutoRotate").classList.toggle("on", on);
+    });
+
+    if ($("#btnSnapshot3D")) $("#btnSnapshot3D").onclick = () => {
+      if (!window.Studio3D) return;
+      const dataUrl = window.Studio3D.exportSnapshot();
+      if (!dataUrl) return toast("Gagal mengambil foto 3D");
+      const a = document.createElement("a");
+      a.href = dataUrl;
+      a.download = `mockup-3d-${S.side || "depan"}.png`;
+      a.click();
+      toast("Foto 3D berhasil diunduh!");
+    };
+
+    // ==========================================
+    // Fitur Lembar Pola Potong Utuh Sublimasi (All-in-One Cutting Sheet)
+    // ==========================================
+    function openPolaUtuhModal() {
+      const modal = $("#modalPolaUtuh");
+      if (!modal) return;
+      const container = $("#polaUtuhContainer");
+      if (container) {
+        container.innerHTML = allPatternPiecesSVG(S.color.hex, S.sides);
+      }
+      const dot = $("#polaUtuhColorDot");
+      if (dot) dot.style.background = S.color.hex;
+      const name = $("#polaUtuhColorName");
+      if (name) name.textContent = S.color.name || S.color.hex;
+
+      modal.classList.add("show");
+    }
+
+    function closePolaUtuhModal() {
+      const modal = $("#modalPolaUtuh");
+      if (modal) modal.classList.remove("show");
+    }
+
+    $("#btnPolaUtuh")?.addEventListener("click", openPolaUtuhModal);
+    $("#btnClosePolaUtuh")?.addEventListener("click", closePolaUtuhModal);
+    $("#btnDonePolaUtuh")?.addEventListener("click", closePolaUtuhModal);
+
+    // Beralih ke bagian yang diklik pada lembar pola utuh
+    $("#polaUtuhContainer")?.addEventListener("click", (e) => {
+      const group = e.target.closest(".pola-piece-group");
+      if (!group) return;
+      const side = group.dataset.side;
+      if (side) {
+        set3DAngle(side);
+        closePolaUtuhModal();
+        const sideNames = { depan: "Badan Depan", belakang: "Badan Belakang", lengan_kiri: "Lengan Kiri", lengan_kanan: "Lengan Kanan", kerah: "Kerah / Rib" };
+        toast("Beralih ke editor bagian: " + (sideNames[side] || side));
+      }
+    });
+
+    // Unduh Pola Potong Utuh PNG Resolusi Tinggi (Siap Cetak Roll Sublimasi)
+    $("#btnDownloadPolaPNG")?.addEventListener("click", () => {
+      const svgEl = $("#polaUtuhContainer svg");
+      if (!svgEl) return;
+      const svgString = new XMLSerializer().serializeToString(svgEl);
+      const svgBlob = new Blob([svgString], { type: "image/svg+xml;charset=utf-8" });
+      const URL = window.URL || window.webkitURL || window;
+      const blobURL = URL.createObjectURL(svgBlob);
+      const img = new Image();
+      img.onload = () => {
+        const cv = document.createElement("canvas");
+        cv.width = 2400;
+        cv.height = 2504;
+        const ctx = cv.getContext("2d");
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(0, 0, cv.width, cv.height);
+        ctx.drawImage(img, 0, 0, cv.width, cv.height);
+        URL.revokeObjectURL(blobURL);
+        const a = document.createElement("a");
+        const prodName = S.product && S.product.name ? S.product.name.replace(/\s+/g, "_") : "Apparel";
+        a.download = `Pola-Potong-Utuh-Sublimasi-${prodName}.png`;
+        a.href = cv.toDataURL("image/png");
+        a.click();
+        toast("Lembar Pola Potong Utuh berhasil diunduh!");
+      };
+      img.src = blobURL;
+    });
+
+    // Callback Interaksi Langsung dari 3D ke UI (Bidirectional Real-Time Sync)
+    if (window.Studio3D) {
+      window.Studio3D.onZoneSelect = (zone) => {
+        S.side = zone;
+        S.sel = null;
+        drawSideTabs();
+        drawAreas();
+        redrawAll();
+      };
+      window.Studio3D.onLayerSelect = (layer) => {
+        select(layer.id);
+      };
+      window.Studio3D.onDeselect = () => {
+        S.sel = null;
+        drawLayerList();
+        drawProps();
+        $$(".ly").forEach(n => n.classList.remove("sel"));
+        if (window.Studio3D && window.Studio3D.initialized) {
+          window.Studio3D.syncFromStudioState(S);
+        }
+      };
+      // Sinkronisasi koordinat real-time ke elemen 2D tanpa merusak innerHTML
+      window.Studio3D.onLayerMove = (layer) => {
+        const el = $(`#area .ly[data-id="${layer.id}"]`);
+        if (el) {
+          el.style.left = (layer.x * 100) + "%";
+          el.style.top = (layer.y * 100) + "%";
+        }
+        drawProps();
+      };
+      window.Studio3D.onLayerMoveEnd = (layer) => {
+        drawProps();
+        drawPreview();
+      };
+      window.Studio3D.onFileDrop = async (file, zone) => {
+        S.side = zone;
+        drawSideTabs();
+        drawAreas();
+        await addImage(file);
+        const sideNames = { depan: "Badan Depan", belakang: "Badan Belakang", lengan_kiri: "Lengan Kiri", lengan_kanan: "Lengan Kanan", kerah: "Kerah / Rib" };
+        toast("Gambar berhasil ditempatkan di " + (sideNames[zone] || zone));
+      };
+    }
+
+    // ==========================================
+    // Kontrol Navigasi Keyboard (Tombol Panah / Nudge)
+    // ==========================================
+    window.addEventListener("keydown", (e) => {
+      if (!["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(e.key)) return;
+
+      const activeEl = document.activeElement;
+      const tag = activeEl ? activeEl.tagName.toLowerCase() : "";
+      if (tag === "input" || tag === "textarea" || tag === "select" || (activeEl && activeEl.isContentEditable)) {
+        return;
+      }
+
+      if ($("#brushModal")?.classList.contains("show") || $("#modal")?.classList.contains("show") || $("#modalPolaUtuh")?.classList.contains("show")) {
+        return;
+      }
+
+      const l = sel();
+      if (!l) return;
+
+      // Cegah scrolling halaman saat menggeser objek dengan tombol panah
+      e.preventDefault();
+
+      // Step pergeseran: halus (1%) atau cepat dengan tombol Shift (4%)
+      const step = e.shiftKey ? 0.04 : 0.01;
+
+      if (e.key === "ArrowLeft") {
+        l.x = Math.max(0.05, Math.min(0.95, l.x - step));
+      } else if (e.key === "ArrowRight") {
+        l.x = Math.max(0.05, Math.min(0.95, l.x + step));
+      } else if (e.key === "ArrowUp") {
+        l.y = Math.max(0.05, Math.min(0.95, l.y - step));
+      } else if (e.key === "ArrowDown") {
+        l.y = Math.max(0.05, Math.min(0.95, l.y + step));
+      }
+
+      drawPreview();
+      if (window.Studio3D && window.Studio3D.initialized) {
+        window.Studio3D.syncFromStudioState(S);
+      }
+    });
+
+    // Helper pembuat gambar untuk Tech Pack
+    const loadImg = src => src ? new Promise(res => { const img = new Image(); img.crossOrigin = "anonymous"; img.onload = () => res(img); img.onerror = () => res(null); img.src = src; }) : Promise.resolve(null);
+
+    // Tombol Unduh Paket Vendor (Tech Pack & 300 DPI Artworks ZIP)
+    if ($("#btnVendorPack")) $("#btnVendorPack").onclick = async () => {
+      if (!window.VendorExport) return toast("Modul VendorExport belum siap.");
+      try {
+        toast("Sedang memproses Paket Vendor (Tech Pack & 300 DPI)...");
+        const orderData = {
+          order_no: "AZK-" + Math.floor(10000 + Math.random() * 90000),
+          customer_name: $("#cName") ? $("#cName").value.trim() || "Desain Studio" : "Desain Studio",
+          customer_phone: $("#cPhone") ? $("#cPhone").value.trim() || "08xxxxxxxxx" : "08xxxxxxxxx",
+          product_name: S.product ? S.product.name : "Kaos Cotton Combed 30s",
+          color: S.color ? S.color.name : "Hitam",
+          colorHex: S.color ? S.color.hex : "#1f2937",
+          method: S.method ? S.method.name : "DTF (Direct to Film)",
+          qty: S.totalQty || 1,
+          size_qty: S.product && S.product.has_sizes ? Object.fromEntries(Object.entries(S.sizes).filter(([, n]) => n > 0)) : { Satuan: S.qty },
+          sides: S.sides,
+          area: S.area,
+          design_note: $("#note") ? $("#note").value.trim() : "",
+          frontMockupImg: await loadImg(window.Studio3D ? window.Studio3D.exportAngleSnapshot("depan") : null),
+          backMockupImg: await loadImg(window.Studio3D ? window.Studio3D.exportAngleSnapshot("belakang") : null),
+          leftSleeveMockupImg: await loadImg(window.Studio3D ? window.Studio3D.exportAngleSnapshot("lengan_kiri") : null),
+          rightSleeveMockupImg: await loadImg(window.Studio3D ? window.Studio3D.exportAngleSnapshot("lengan_kanan") : null),
+          frontDims: window.VendorExport.getZoneDimension("depan", S.area),
+          backDims: window.VendorExport.getZoneDimension("belakang", S.area),
+          leftSleeveDims: window.VendorExport.getZoneDimension("lengan_kiri", S.area),
+          rightSleeveDims: window.VendorExport.getZoneDimension("lengan_kanan", S.area)
+        };
+        await window.VendorExport.exportVendorBundle(orderData, SHAPES);
+        toast("Paket Vendor (.ZIP) berhasil diunduh!");
+      } catch (e) {
+        toast("Gagal mengekspor paket vendor: " + e.message);
+      }
+    };
+
+    // ---- Mulai ----
+    Promise.all([DB.products(), DB.methods()]).then(([p, m]) => {
+      products = p; methods = m; S.method = m[0];
+      $("#product").innerHTML = p.map(x => `<option value="${x.id}">${esc(x.name)}</option>`).join("");
+      drawMethods();
+      const id = new URLSearchParams(location.search).get("product");
+      selectProduct(p.find(x => x.id === id) || p[0]);
+      switchPanelTab("desain");
+    }).catch(err => { $("#title").textContent = "Gagal memuat data: " + err.message; });
+  </script>
+</body>
+</html>

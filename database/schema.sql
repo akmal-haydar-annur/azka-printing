@@ -10,11 +10,12 @@ create table if not exists products (
   name        text not null,
   category    text not null,              -- kaos | hoodie | mug | totebag | akrilik
   description text,
-  base_price  integer not null,           -- harga dasar per pcs (Rupiah)
+  base_price  integer not null check (base_price >= 0), -- harga dasar per pcs (Rupiah)
   has_sizes   boolean not null default true,
   colors      jsonb not null default '[]',-- [{"name":"Hitam","hex":"#1f2937"}]
   sort        integer not null default 0,
   active      boolean not null default true,
+  image_url   text,                       -- foto produk asli (diupload admin)
   created_at  timestamptz not null default now()
 );
 
@@ -23,7 +24,7 @@ create table if not exists print_methods (
   id          uuid primary key default gen_random_uuid(),
   name        text not null,
   description text,
-  extra_price integer not null default 0, -- tambahan biaya per pcs
+  extra_price integer not null default 0 check (extra_price >= 0), -- tambahan biaya per pcs
   sort        integer not null default 0
 );
 
@@ -33,66 +34,81 @@ create table if not exists orders (
   order_no       text unique not null,      -- contoh: AZK-48213
   customer_name  text not null,
   customer_phone text not null,
-  status         text not null default 'menunggu_bayar',
-                 -- menunggu_bayar | diproduksi | dikirim | selesai
-  total          integer not null,
+  status         text not null default 'menunggu_bayar'
+                 check (status in ('menunggu_bayar', 'diproduksi', 'dikirim', 'selesai')),
+  total          integer not null check (total >= 0),
   created_at     timestamptz not null default now()
 );
 
 -- 4) TABEL ISI PESANAN -------------------------------
 create table if not exists order_items (
-  id           uuid primary key default gen_random_uuid(),
-  order_id     uuid not null references orders(id) on delete cascade,
-  product_id   uuid references products(id),
-  product_name text not null,
-  method       text not null,
-  color        text,
-  size_qty     jsonb not null default '{}',  -- {"S":2,"M":5}
-  qty          integer not null,
-  unit_price   integer not null,
-  subtotal     integer not null,
-  design_url   text,
-  design_text  text,
-  design_back_url text,
-  design_json  jsonb,
-  design_mode  text,
-  design_note  text
+  id              uuid primary key default gen_random_uuid(),
+  order_id        uuid not null references orders(id) on delete cascade,
+  product_id      uuid references products(id),
+  product_name    text not null,
+  method          text not null,
+  color           text,
+  size_qty        jsonb not null default '{}',  -- {"S":2,"M":5}
+  qty             integer not null check (qty > 0),
+  unit_price      integer not null check (unit_price >= 0),
+  subtotal        integer not null check (subtotal >= 0),
+  design_url      text,                         -- file desain sisi depan
+  design_text     text,
+  design_back_url text,                         -- file desain sisi belakang
+  design_json     jsonb,                        -- metadata canvas elemen (teks, bentuk, posisi)
+  design_mode     text,                         -- 'editor' | 'upload'
+  design_note     text                          -- catatan pelanggan untuk tim produksi
 );
 
 create index if not exists idx_order_items_order on order_items(order_id);
 create index if not exists idx_orders_created on orders(created_at desc);
+create index if not exists idx_orders_order_no on orders(order_no);
 
 -- 5) KEAMANAN (Row Level Security) -------------------
--- Catatan: ini versi belajar. Pengunjung boleh LIHAT produk,
--- BUAT pesanan, dan LIHAT pesanan. Untuk produksi nyata,
--- tambahkan login (Supabase Auth) agar orang hanya melihat pesanannya sendiri.
 alter table products      enable row level security;
 alter table print_methods enable row level security;
 alter table orders        enable row level security;
 alter table order_items   enable row level security;
 
-create policy "produk bisa dibaca semua"  on products      for select using (true);
-create policy "teknik bisa dibaca semua"  on print_methods for select using (true);
-create policy "pesanan bisa dibaca"       on orders        for select using (true);
-create policy "pesanan bisa dibuat"       on orders        for insert with check (true);
-create policy "isi pesanan bisa dibaca"   on order_items   for select using (true);
-create policy "isi pesanan bisa dibuat"   on order_items   for insert with check (true);
+-- Produk & teknik cetak bisa dibaca umum
+drop policy if exists "produk bisa dibaca semua" on products;
+create policy "produk bisa dibaca semua" on products for select using (true);
 
--- 6) STORAGE UNTUK FILE DESAIN -----------------------
+drop policy if exists "teknik bisa dibaca semua" on print_methods;
+create policy "teknik bisa dibaca semua" on print_methods for select using (true);
+
+-- Pesanan: publik bisa membuat pesanan (insert) dan melacak pesanan (select)
+drop policy if exists "pesanan bisa dibaca" on orders;
+create policy "pesanan bisa dibaca" on orders for select using (true);
+
+drop policy if exists "pesanan bisa dibuat" on orders;
+create policy "pesanan bisa dibuat" on orders for insert with check (true);
+
+drop policy if exists "isi pesanan bisa dibaca" on order_items;
+create policy "isi pesanan bisa dibaca" on order_items for select using (true);
+
+drop policy if exists "isi pesanan bisa dibuat" on order_items;
+create policy "isi pesanan bisa dibuat" on order_items for insert with check (true);
+
+-- 6) STORAGE UNTUK FILE DESAIN & FOTO PRODUK ---------
 insert into storage.buckets (id, name, public)
 values ('designs', 'designs', true)
 on conflict (id) do nothing;
 
+drop policy if exists "desain bisa diupload" on storage.objects;
 create policy "desain bisa diupload" on storage.objects
   for insert with check (bucket_id = 'designs');
+
+drop policy if exists "desain bisa dilihat" on storage.objects;
 create policy "desain bisa dilihat" on storage.objects
   for select using (bucket_id = 'designs');
 
--- 7) DATA AWAL ---------------------------------------
+-- 7) DATA AWAL (SEED) --------------------------------
 insert into print_methods (name, description, extra_price, sort) values
  ('DTF (Direct to Film)', 'Warna penuh tanpa batas warna, detail halus', 25000, 1),
  ('Sablon Plastisol',     'Tahan lama, cocok untuk teks & logo solid', 20000, 2),
- ('Bordir Komputer',      'Hasil timbul elegan, tahan lama',           35000, 3);
+ ('Bordir Komputer',      'Hasil timbul elegan, tahan lama',           35000, 3)
+on conflict do nothing;
 
 insert into products (sku, name, category, description, base_price, has_sizes, colors, sort) values
  ('AZ-TS-30S', 'Kaos Cotton Combed 30s', 'kaos',
@@ -112,4 +128,5 @@ insert into products (sku, name, category, description, base_price, has_sizes, c
   '[{"name":"Krem","hex":"#e7dfd0"},{"name":"Hitam","hex":"#1f2937"}]', 5),
  ('AZ-AK-3MM', 'Akrilik Keychain 3mm', 'akrilik',
   'Gantungan kunci akrilik 2 sisi, potong sesuai bentuk desain.', 14500, false,
-  '[{"name":"Bening","hex":"#dbeafe"}]', 6);
+  '[{"name":"Bening","hex":"#dbeafe"}]', 6)
+on conflict do nothing;

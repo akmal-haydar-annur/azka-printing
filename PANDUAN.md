@@ -18,9 +18,11 @@ Alurnya: pengunjung membuka web (Vercel), lalu web membaca dan menyimpan data ke
 
 ```
 azka-printing/
+├── assets/
+│   └── azka-printing-logo.jpeg -> logo resmi Azka Printing
 ├── index.html        -> halaman Katalog
 ├── studio.html       -> halaman Studio Desain + pemesanan
-├── orders.html       -> halaman Daftar Pesanan
+├── orders.html       -> halaman Lacak Pesanan
 ├── css/style.css     -> semua gaya tampilan
 ├── js/
 │   ├── config.js     -> URL & kunci Supabase (kamu isi sendiri)
@@ -172,17 +174,17 @@ Contoh warna pada produk (kolom `colors`) berformat JSON:
 
 ---
 
-## 6. Catatan keamanan (wajib dibaca)
+## 6. Catatan keamanan & privasi data
 
-Versi ini dibuat untuk **belajar dan prototipe**. Saat ini siapa pun yang membuka web bisa **melihat semua pesanan** (nama dan nomor HP pelanggan) lewat halaman Pesanan. Itu diatur oleh *policy* di `schema.sql`.
+Halaman **Lacak Pesanan** (`orders.html`) kini telah disesuaikan dengan standar privasi:
+1. **Pelacakan Individual:** Pengunjung umum tidak lagi bisa melihat daftar seluruh pesanan, nama pembeli, nomor HP, atau total pendapatan toko. Pengunjung melacak dengan memasukkan **Nomor Pesanan** miliknya (contoh: `AZK-48213`), atau otomatis melihat pesanan miliknya yang dibuat di browser/perangkat tersebut.
+2. **Dashboard Lengkap di Admin:** Rekap seluruh pesanan, perubahan status, dan total pendapatan bisnis berada di `admin.html` yang terproteksi login.
+3. **Konfirmasi WhatsApp:** Nomor WhatsApp admin/CS diatur di `js/config.js` (`ADMIN_WHATSAPP`), sehingga tombol konfirmasi di halaman pesanan langsung membuka chat WhatsApp dengan template pesan rapi.
+4. **Database Check Constraints:** Tabel pesanan dan produk telah dilengkapi constraint validasi (`total >= 0`, `qty > 0`, `unit_price >= 0`) di `database/schema.sql`.
 
-Sebelum dipakai untuk bisnis sungguhan:
-1. Aktifkan **Supabase Auth** (login email atau Google).
-2. Tambahkan kolom `user_id` di tabel `orders`.
-3. Ubah policy agar pelanggan hanya bisa melihat pesanannya sendiri (`using (auth.uid() = user_id)`).
-4. Halaman admin untuk mengubah status pesanan dibuat terpisah dan dilindungi login.
-
-Pembayaran online (Midtrans, Xendit) juga belum ada. Saat ini pesanan berstatus *Menunggu Bayar* dan penagihan dilakukan manual lewat WhatsApp.
+Untuk peningkatan keamanan lebih lanjut sebelum skala besar:
+- Aktifkan login pelanggan (Supabase Auth) bila ingin riwayat akun tersimpan permanen lintas perangkat.
+- Integrasikan Payment Gateway (Midtrans/Xendit) untuk verifikasi pembayaran otomatis.
 
 ---
 

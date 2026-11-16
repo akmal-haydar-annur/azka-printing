@@ -96,32 +96,89 @@ const DB = {
     return data;
   },
 
+  // ---------- PEMESANAN ----------
   async createOrder(order, items) {
+    if (!order.customer_name || !order.customer_phone) {
+      throw new Error("Nama dan nomor WhatsApp pelanggan wajib diisi.");
+    }
+    if (!items || !items.length) {
+      throw new Error("Pesanan harus memiliki minimal 1 item.");
+    }
+
     if (LIVE) {
       // Pastikan kolom desain baru sudah ada (database/update_desain.sql) sebelum pesanan dibuat
       const chk = await sb.from("order_items").select("design_json,design_back_url,design_note,design_mode").limit(1);
       if (chk.error) throw new Error("Jalankan database/update_desain.sql di Supabase dulu (kolom desain belum ada).");
     }
+
+    let created;
     if (!LIVE) {
       const all = JSON.parse(localStorage.getItem("azka_orders") || "[]");
-      const row = { ...order, id: crypto.randomUUID(), created_at: new Date().toISOString(), order_items: items };
-      all.unshift(row);
+      created = { ...order, id: crypto.randomUUID(), created_at: new Date().toISOString(), order_items: items };
+      all.unshift(created);
       localStorage.setItem("azka_orders", JSON.stringify(all));
-      return row;
+    } else {
+      const { data, error } = await sb.from("orders").insert(order).select().single();
+      if (error) throw error;
+      const rows = items.map(i => ({ ...i, order_id: data.id }));
+      const r = await sb.from("order_items").insert(rows);
+      if (r.error) throw r.error;
+      created = { ...data, order_items: items };
     }
-    const { data, error } = await sb.from("orders").insert(order).select().single();
-    if (error) throw error;
-    const rows = items.map(i => ({ ...i, order_id: data.id }));
-    const r = await sb.from("order_items").insert(rows);
-    if (r.error) throw r.error;
-    return data;
+
+    // Catat nomor pesanan di perangkat ini agar pelanggan bisa melacak dengan mudah
+    try {
+      const my = JSON.parse(localStorage.getItem("azka_my_orders") || "[]");
+      const exists = my.findIndex(x => (typeof x === "string" ? x : x.order_no) === order.order_no);
+      const entry = { order_no: order.order_no, created_at: new Date().toISOString(), total: order.total };
+      if (exists >= 0) my[exists] = entry; else my.unshift(entry);
+      localStorage.setItem("azka_my_orders", JSON.stringify(my.slice(0, 30)));
+    } catch (_) {}
+
+    return created;
   },
 
+  // Ambil semua pesanan (khusus Dashboard Admin)
   async orders() {
     if (!LIVE) return JSON.parse(localStorage.getItem("azka_orders") || "[]");
     const { data, error } = await sb.from("orders").select("*, order_items(*)").order("created_at", { ascending: false });
     if (error) throw error;
     return data;
+  },
+
+  // Lacak 1 pesanan berdasarkan nomor order (untuk halaman publik orders.html)
+  async getOrderByNo(orderNo) {
+    if (!orderNo) return null;
+    const cleanNo = String(orderNo).trim().toUpperCase().replace(/^#/, "");
+    if (!LIVE) {
+      const all = JSON.parse(localStorage.getItem("azka_orders") || "[]");
+      return all.find(o => String(o.order_no).toUpperCase() === cleanNo) || null;
+    }
+    const { data, error } = await sb.from("orders")
+      .select("*, order_items(*)")
+      .ilike("order_no", cleanNo)
+      .maybeSingle();
+    if (error) throw error;
+    return data;
+  },
+
+  // Daftar pesanan milik perangkat ini (riwayat lokal browser)
+  async myOrders() {
+    if (!LIVE) {
+      return JSON.parse(localStorage.getItem("azka_orders") || "[]");
+    }
+    const my = JSON.parse(localStorage.getItem("azka_my_orders") || "[]");
+    if (!my.length) return [];
+    const nos = my.map(m => (typeof m === "string" ? m : m.order_no));
+    const { data, error } = await sb.from("orders")
+      .select("*, order_items(*)")
+      .in("order_no", nos)
+      .order("created_at", { ascending: false });
+    if (error) {
+      console.warn("Gagal memuat pesanan lokal:", error);
+      return [];
+    }
+    return data || [];
   },
 
   // Upload gambar desain ke Supabase Storage, mengembalikan URL publik

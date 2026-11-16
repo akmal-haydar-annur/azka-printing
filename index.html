@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Azka Printing - Katalog Merchandise</title>
+  <link rel="icon" type="image/jpeg" href="assets/azka-printing-logo.jpeg">
+  <link rel="apple-touch-icon" href="assets/azka-printing-logo.jpeg">
+  <meta property="og:image" content="assets/azka-printing-logo.jpeg">
+  <meta property="og:title" content="Azka Printing - Cetak Merchandise Komunitas & Distro">
+  <meta property="og:description" content="Bebas minimum order, bisa satuan. Diskon otomatis mulai 12 pcs. Buat merchandise kustom kamu sekarang.">
+  <link rel="stylesheet" href="css/style.css?v=7">
+</head>
+<body>
+  <header id="header"></header>
+  <main class="container">
+    <!-- Hero Bento Section (Supabase Clean Style) -->
+    <section class="hero-bento">
+      <div class="hero-content">
+        <div class="hero-badge">
+          <img src="assets/azka-printing-logo.jpeg" alt="" class="hero-badge-logo">
+          <span>Azka Printing Studio &bull; Custom Merchandise</span>
+        </div>
+        <h1>Cetak Merchandise Distro.<br><span class="hero-gradient">Bebas minimum order.</span></h1>
+        <p>Sablon DTF beresolusi tinggi, bordir presisi &amp; merchandise distro berkualitas. Pesan satuan untuk kebutuhan personal atau ribuan pcs untuk komunitas dengan diskon grosir otomatis.</p>
+        <div class="hero-actions">
+          <a class="btn primary" href="studio.html">Mulai Desain Sekarang ›</a>
+          <a class="btn secondary" href="orders.html">Lacak Status Pesanan</a>
+        </div>
+        <div class="hero-features">
+          <span><i class="f-dot"></i>Bisa Satuan (No Minimum)</span>
+          <span><i class="f-dot"></i>Studio Desain Interaktif</span>
+          <span><i class="f-dot"></i>Diskon Grosir s.d 15%</span>
+          <span><i class="f-dot"></i>Kirim Se-Indonesia</span>
+        </div>
+      </div>
+      <div class="hero-visual">
+        <div class="hero-card-preview">
+          <div class="hero-preview-tag">PREVIEW 3D REALISTIS</div>
+          <div class="hero-mockup-wrap" id="heroMockup">
+            <!-- Render via script -->
+          </div>
+          <div class="hero-color-picker" id="heroColors" style="display:flex;gap:7px;margin:8px 0 2px"></div>
+          <div class="hero-preview-meta">
+            <div>
+              <b>Kaos Combed 30s</b>
+              <small>DTF Full Color &bull; 100% Combed</small>
+            </div>
+            <a class="btn sm primary" href="studio.html?product=p1">Desain ›</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Toolbar: Search Box & Supabase Segmented Control -->
+    <div class="toolbar">
+      <div class="search-box">
+        <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input id="q" class="search" placeholder="Cari nama kaos, hoodie, mug...">
+      </div>
+      <div class="segmented-control" id="chips"></div>
+    </div>
+
+    <!-- Product Grid -->
+    <div class="grid" id="grid"></div>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/config.js"></script>
+  <script src="js/db.js"></script>
+  <script src="js/ui.js"></script>
+  <script>
+    renderHeader("katalog");
+    let products = [], cat = "semua", q = "";
+    const activeColors = {};
+    const CATS = { semua: "Semua", kaos: "Kaos", hoodie: "Hoodie", mug: "Mug", totebag: "Totebag", akrilik: "Akrilik" };
+
+    // Interactive Hero Mockup Colors
+    const HERO_COLORS = [
+      { name: "Hijau Logo", hex: "#2d562c" },
+      { name: "Hitam", hex: "#1f2937" },
+      { name: "Navy", hex: "#1e3a8a" },
+      { name: "Merah", hex: "#b91c1c" },
+      { name: "Putih", hex: "#f8fafc" }
+    ];
+    let curHeroHex = "#2d562c";
+
+    function updateHeroMockup(hex) {
+      curHeroHex = hex;
+      const heroMockupEl = $("#heroMockup");
+      if (heroMockupEl) {
+        heroMockupEl.innerHTML = productSVG("kaos", hex);
+      }
+      const heroColorsEl = $("#heroColors");
+      if (heroColorsEl) {
+        heroColorsEl.innerHTML = HERO_COLORS.map(c => `
+          <button class="dot ${c.hex === hex ? "on" : ""}" 
+                  style="background:${c.hex}" 
+                  title="${c.name}" 
+                  onclick="updateHeroMockup('${c.hex}')" 
+                  aria-label="${c.name}">
+          </button>
+        `).join("");
+      }
+    }
+    updateHeroMockup(curHeroHex);
+
+    function draw() {
+      // Segmented control chips
+      $("#chips").innerHTML = Object.entries(CATS).map(([k, t]) =>
+        `<button class="seg-chip ${k === cat ? "on" : ""}" data-c="${k}">${t}</button>`).join("");
+
+      // Filtered list
+      const query = q.toLowerCase().trim();
+      const list = products.filter(p =>
+        (cat === "semua" || p.category === cat) &&
+        (p.name.toLowerCase().includes(query) || (p.sku && p.sku.toLowerCase().includes(query)) || p.category.toLowerCase().includes(query))
+      );
+
+      $("#grid").innerHTML = list.length ? list.map(p => {
+        const curColor = activeColors[p.id] || p.colors[0] || { name: "Standar", hex: "#1f2937" };
+        return `
+          <article class="pcard" data-pid="${p.id}">
+            <div class="pimg ${p.image_url ? "has-img" : ""}" id="pimg-${p.id}">
+              ${p.image_url ? `<img src="${esc(p.image_url)}" alt="${esc(p.name)}">` : productSVG(p.category, curColor.hex)}
+            </div>
+            <div class="pbody">
+              <span class="pcat">${esc(p.category)}</span>
+              <div class="pname">${esc(p.name)}</div>
+              <div class="pdesc">${esc(p.description)}</div>
+              <div class="dots-wrap">
+                <div class="dots">
+                  ${p.colors.map(c => `
+                    <span class="dot ${c.hex === curColor.hex ? "on" : ""}"
+                          data-pid="${p.id}"
+                          data-hex="${c.hex}"
+                          data-name="${esc(c.name)}"
+                          title="${esc(c.name)}"
+                          style="background:${c.hex}"></span>
+                  `).join("")}
+                </div>
+                <span class="dot-label" id="clbl-${p.id}">${esc(curColor.name)}</span>
+              </div>
+              <div class="pprice">
+                <div>
+                  <small>Mulai dari</small><br>
+                  <b>${rupiah(p.base_price)}</b>
+                </div>
+                <a class="btn primary" href="studio.html?product=${p.id}">Desain ›</a>
+              </div>
+            </div>
+          </article>`;
+      }).join("") : `
+        <div class="empty" style="grid-column:1/-1;padding:60px 20px">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="color:var(--muted);margin-bottom:8px"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <b style="font-size:16px;color:var(--ink);display:block">Produk Tidak Ditemukan</b>
+          <p class="sub" style="margin-top:4px">Tidak ada produk yang cocok dengan pencarian "<b>${esc(q)}</b>". Coba gunakan kata kunci lain.</p>
+        </div>`;
+    }
+
+    // Interaktivitas Segmented Control
+    $("#chips").addEventListener("click", e => {
+      const b = e.target.closest("[data-c]");
+      if (b) { cat = b.dataset.c; draw(); }
+    });
+
+    // Real-time search
+    $("#q").addEventListener("input", e => {
+      q = e.target.value;
+      draw();
+    });
+
+    // Interaktivitas Ganti Warna Produk Langsung di Kartu
+    $("#grid").addEventListener("click", e => {
+      const dot = e.target.closest(".dot");
+      if (!dot) return;
+      const pid = dot.dataset.pid;
+      const prod = products.find(p => p.id === pid);
+      if (!prod) return;
+      const col = prod.colors.find(c => c.hex === dot.dataset.hex);
+      if (col) {
+        activeColors[pid] = col;
+        const pimg = $(`#pimg-${pid}`);
+        if (pimg && !prod.image_url) {
+          pimg.innerHTML = productSVG(prod.category, col.hex);
+        }
+        const lbl = $(`#clbl-${pid}`);
+        if (lbl) lbl.textContent = col.name;
+
+        const dotsWrap = dot.parentElement;
+        dotsWrap.querySelectorAll(".dot").forEach(d => d.classList.toggle("on", d === dot));
+      }
+    });
+
+    DB.products().then(r => { products = r; draw(); })
+      .catch(err => { $("#grid").innerHTML = `<div class="empty">Gagal memuat data: ${esc(err.message)}</div>`; });
+  </script>
+</body>
+</html>
